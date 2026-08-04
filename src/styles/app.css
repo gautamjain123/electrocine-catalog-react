@@ -1,0 +1,904 @@
+/* ============================================================================
+   Electrocine — layout system
+
+   Layout lives here, not in JS. The prototype bucketed every width into three
+   JS breakpoints (sm/md/lg at 720/1080), which left a 1079px desktop window on
+   the phone layout and pushed the menu button off-screen at 320px. These rules
+   are mobile-first and fluid, so every width in between is handled.
+
+   Breakpoints:  480  640  768  1024  1280  1536
+   The desktop nav takes over at 1024, where there is finally room for it.
+   ========================================================================= */
+
+:root {
+  --bg: #f2f2f3;
+  --ink: #1d1f20;
+  --ink-2: #424244;
+  --muted: #5d5d60;
+  --muted-2: #7a7a7d;
+  --navy: #1d2d3d;
+  --accent: #5980a6;
+  --accent-dark: #416180;
+  --accent-light: #b5d9fd;
+  --line: rgba(29, 31, 32, 0.16);
+  --line-soft: rgba(29, 31, 32, 0.12);
+  --line-dark: rgba(255, 255, 255, 0.16);
+
+  --font-body: Barlow, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-head: 'Barlow Condensed', var(--font-body);
+
+  /* Fluid gutter: 16px on a small phone, 28px from tablet up. */
+  --gutter: clamp(16px, 4vw, 28px);
+  --maxw: 1280px;
+
+  /* Fluid section rhythm — 56px on phones, 104px on desktop. */
+  --section-y: clamp(56px, 8vw, 104px);
+  --gap-lg: clamp(28px, 4vw, 64px);
+  --gap-md: clamp(20px, 3vw, 44px);
+  --gap-sm: 16px;
+}
+
+/* ── shell ───────────────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.section-y {
+  padding-block: var(--section-y);
+}
+
+/* ── fluid type ──────────────────────────────────────────────────────────── */
+.t-h1 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: clamp(38px, 7vw, 88px);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
+  margin: 0 0 22px;
+  text-wrap: balance;
+}
+.t-h2 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: clamp(28px, 4.4vw, 54px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+.t-h3 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: clamp(22px, 2.6vw, 31px);
+  line-height: 1.06;
+  margin: 0;
+}
+.t-kicker {
+  font-size: clamp(10px, 1.4vw, 11px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.t-lead {
+  font-size: clamp(15.5px, 1.5vw, 18px);
+  line-height: 1.62;
+}
+.t-body {
+  font-size: clamp(14.5px, 1.3vw, 17px);
+  line-height: 1.6;
+}
+
+/* ── responsive grids ────────────────────────────────────────────────────── */
+.g {
+  display: grid;
+  gap: var(--gap-sm);
+}
+/* Grid items default to min-width:auto, which makes a track refuse to shrink
+   below its widest content — that is what pushes tables and long codes past the
+   viewport. Zeroing it lets the inner .table-scroll own the overflow instead. */
+.g > * {
+  min-width: 0;
+}
+.g-lg {
+  gap: var(--gap-lg);
+}
+.g-md {
+  gap: var(--gap-md);
+}
+
+/* auto-fit tracks: the cleanest possible reflow — no breakpoint guessing */
+.g-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+.g-cards-sm {
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+}
+.g-cards-xs {
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+}
+
+/* hairline grid — 1px gaps reading as dividers */
+.g-hair {
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.g-hair-dark {
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* two-column splits: stack until there is genuinely room */
+.g-split {
+  grid-template-columns: 1fr;
+}
+.g-split-hero {
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .g-split {
+    grid-template-columns: 1fr 1fr;
+  }
+  .g-split-hero {
+    grid-template-columns: 1.08fr 0.92fr;
+    min-height: 560px;
+  }
+  .g-split-tech {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .g-split-faq {
+    grid-template-columns: 0.7fr 1.3fr;
+  }
+  .g-split-contact {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+/* catalogue: sidebar appears only when it will not squeeze the grid */
+.g-catalogue {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gap-md);
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .g-catalogue {
+    grid-template-columns: 238px minmax(0, 1fr);
+    gap: 36px;
+  }
+  .g-catalogue > .aside-sticky {
+    position: sticky;
+    top: 92px;
+  }
+}
+
+/* footer: 1 → 2 → 4 columns */
+.g-footer {
+  grid-template-columns: 1fr;
+  gap: 34px;
+  padding-bottom: 52px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+@media (min-width: 640px) {
+  .g-footer {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+  }
+}
+@media (min-width: 1024px) {
+  .g-footer {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 44px;
+  }
+  .g-footer > :first-child {
+    grid-column: auto;
+  }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .g-footer > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* form: single column until there is room for pairs */
+.g-form {
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 560px) {
+  .g-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+.g-form .span-all {
+  grid-column: 1 / -1;
+}
+
+/* process: 1 → 2 → 3 → 5 */
+.g-process {
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+@media (min-width: 560px) {
+  .g-process {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 900px) {
+  .g-process {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1280px) {
+  .g-process {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+}
+
+/* timeline: year stacks above the entry on phones, sits beside it from 640 */
+.g-timeline {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+@media (min-width: 640px) {
+  .g-timeline {
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+}
+
+/* counters: 2 → 4 */
+.g-counters {
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(24px, 3vw, 36px);
+  margin-bottom: clamp(44px, 6vw, 64px);
+}
+@media (min-width: 900px) {
+  .g-counters {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── bento ───────────────────────────────────────────────────────────────── */
+.g-bento {
+  grid-template-columns: 1fr;
+  gap: var(--gap-sm);
+}
+.g-bento > * {
+  min-height: 250px;
+}
+@media (min-width: 700px) {
+  .g-bento {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .g-bento > * {
+    grid-column: span 3;
+    min-height: 270px;
+  }
+  .g-bento > :first-child {
+    grid-column: span 6;
+    min-height: 280px;
+  }
+  .g-bento > :last-child {
+    grid-column: span 6;
+    min-height: 240px;
+  }
+}
+@media (min-width: 1024px) {
+  .g-bento > * {
+    grid-column: span 2;
+    min-height: 280px;
+  }
+  .g-bento > :first-child {
+    grid-column: span 4;
+    min-height: 300px;
+  }
+  .g-bento > :nth-child(2) {
+    grid-column: span 2;
+    min-height: 300px;
+  }
+  .g-bento > :last-child {
+    grid-column: span 6;
+    min-height: 250px;
+  }
+}
+
+/* ── hero floaters ───────────────────────────────────────────────────────── */
+/* Below 1024 they are a plain reflowing grid; above, the scattered collage. */
+.floaters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 12px;
+  padding-bottom: 8px;
+}
+.floaters > * {
+  position: relative;
+}
+@media (min-width: 1024px) {
+  .floaters {
+    display: block;
+    position: relative;
+    height: 560px;
+    padding: 0;
+  }
+  .floaters > * {
+    position: absolute;
+  }
+  .floaters > :nth-child(1) {
+    top: 16px;
+    left: 2%;
+    width: 216px;
+    animation: drift 7s ease-in-out infinite;
+  }
+  .floaters > :nth-child(2) {
+    top: 168px;
+    right: 0;
+    width: 230px;
+    animation: drift 8.5s ease-in-out 0.7s infinite;
+  }
+  .floaters > :nth-child(3) {
+    bottom: 96px;
+    left: 12%;
+    width: 206px;
+    animation: drift 9.5s ease-in-out 1.3s infinite;
+  }
+  .floaters > :nth-child(4) {
+    bottom: 8px;
+    right: 12%;
+    width: 198px;
+    animation: drift 7.8s ease-in-out 0.3s infinite;
+  }
+}
+[data-motion='reduced'] .floaters > * {
+  animation: none !important;
+}
+
+/* ── nav ─────────────────────────────────────────────────────────────────── */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 28px);
+  height: 68px;
+}
+.nav-desktop {
+  display: none;
+}
+.nav-burger {
+  display: inline-flex;
+}
+@media (min-width: 1024px) {
+  .nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1 1 auto;
+    margin-left: 14px;
+  }
+  .nav-burger {
+    display: none;
+  }
+}
+/* The "Make in India" chip is the first thing to go when space is tight. */
+.nav-badge {
+  display: none;
+}
+@media (min-width: 1180px) {
+  .nav-badge {
+    display: flex;
+  }
+}
+/* Below 380px the quote button's label would push the burger off-screen.
+   Scoped to .nav-bar so it outranks .btn's own display declaration. */
+.nav-cta {
+  white-space: nowrap;
+}
+@media (max-width: 379px) {
+  .nav-bar .nav-cta {
+    display: none;
+  }
+}
+
+/* breadcrumbs — comfortable target without changing the visual weight */
+.crumb {
+  background: none;
+  border: 0;
+  padding: 8px 2px;
+  min-height: 34px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.crumb:hover {
+  color: #fff;
+}
+.nav-wordmark {
+  line-height: 1.05;
+}
+@media (max-width: 359px) {
+  .nav-wordmark {
+    display: none;
+  }
+}
+
+/* mega menu — CSS hover/focus, so it works without JS and for keyboards */
+.mega-wrap {
+  position: relative;
+}
+.mega {
+  position: absolute;
+  top: 100%;
+  left: -14px;
+  padding-top: 10px;
+  width: min(760px, calc(100vw - 40px));
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s;
+}
+.mega-wrap:hover .mega,
+.mega-wrap:focus-within .mega {
+  opacity: 1;
+  visibility: visible;
+}
+.mega-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 4px 22px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 24px 60px rgba(29, 31, 32, 0.18);
+  padding: 22px;
+}
+.mega-item {
+  padding: 11px 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.18s, background 0.18s;
+  text-align: left;
+  background: none;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+.mega-item:hover {
+  border-color: rgba(89, 128, 166, 0.4);
+  background: rgba(89, 128, 166, 0.07);
+}
+
+/* ── carousel ────────────────────────────────────────────────────────────── */
+/* Scroll-snap instead of a translated track: swipeable on touch, and the
+   number of visible cards follows from the track width at any viewport. */
+.carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(100%, 420px);
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+  overscroll-behavior-x: contain;
+}
+.carousel > * {
+  scroll-snap-align: start;
+}
+.carousel::-webkit-scrollbar {
+  height: 6px;
+}
+.carousel::-webkit-scrollbar-thumb {
+  background: rgba(29, 31, 32, 0.22);
+}
+
+/* ── components ──────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-head);
+  font-size: clamp(14px, 1.4vw, 16px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 0;
+  padding: 15px clamp(20px, 3vw, 32px);
+  min-height: 48px;
+  transition: background 0.2s, color 0.2s, transform 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--accent-dark);
+}
+.btn-light {
+  background: var(--bg);
+  color: var(--navy);
+}
+.btn-light:hover {
+  transform: translateY(-2px);
+}
+.btn-dark {
+  background: var(--navy);
+  color: var(--bg);
+}
+.btn-dark:hover {
+  transform: translateY(-2px);
+}
+.btn-ghost-light {
+  background: transparent;
+  color: var(--bg);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.btn-ghost-light:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.btn-outline {
+  background: none;
+  border: 1px solid rgba(29, 31, 32, 0.24);
+  color: var(--muted);
+  font-family: var(--font-head);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 12px 24px;
+  min-height: 44px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* segmented chips */
+.chip {
+  background: var(--bg);
+  color: var(--muted);
+  border: 0;
+  padding: 11px 16px;
+  min-height: 44px;
+  font-family: var(--font-head);
+  font-size: 13px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.chip:hover {
+  background: #fff;
+}
+.chip[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+}
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.chip-grow {
+  flex: 1 1 0;
+}
+
+/* filter pills */
+.pill {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid rgba(29, 31, 32, 0.22);
+  padding: 9px 12px;
+  min-height: 40px;
+  font-size: 11.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.pill:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+.pill[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* family list */
+.famlist {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 30px;
+}
+.fam {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: var(--bg);
+  color: var(--ink);
+  border: 0;
+  padding: 13px 15px;
+  min-height: 46px;
+  font-family: var(--font-head);
+  font-size: 15.5px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.fam:hover {
+  background: #fff;
+}
+.fam[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* hoverable surfaces — CSS, so nothing sticks after a tap on touch devices */
+.hov-lift {
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.32s, background 0.32s;
+}
+@media (hover: hover) {
+  .hov-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 44px rgba(43, 43, 45, 0.18);
+    background: #fff;
+  }
+  .hov-lift:hover .zoom-img {
+    transform: scale(1.1);
+  }
+  .hov-float:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 34px 80px rgba(0, 0, 0, 0.5);
+  }
+  .hov-white:hover {
+    background: #fff;
+  }
+  .hov-cert:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(43, 43, 45, 0.18);
+  }
+  .hov-row:hover {
+    background: rgba(89, 128, 166, 0.06);
+  }
+  .hov-link:hover {
+    color: var(--accent-light);
+  }
+  .hov-accent:hover {
+    color: var(--accent-dark);
+  }
+}
+.hov-float {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s;
+}
+.hov-white,
+.hov-cert,
+.hov-row,
+.hov-link,
+.hov-accent {
+  transition: background 0.25s, color 0.2s, transform 0.3s, box-shadow 0.3s;
+}
+.zoom-img {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* service card — expands on hover, always expanded on touch/narrow */
+.svc-detail {
+  overflow: hidden;
+  transition: max-height 0.42s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.32s;
+  max-height: 260px;
+  opacity: 1;
+}
+@media (hover: hover) and (min-width: 1024px) {
+  .svc-detail {
+    max-height: 0;
+    opacity: 0;
+  }
+  .svc:hover .svc-detail,
+  .svc:focus-within .svc-detail {
+    max-height: 260px;
+    opacity: 1;
+  }
+  .svc:hover .svc-inner,
+  .svc:focus-within .svc-inner {
+    transform: translateY(-6px);
+  }
+  .svc:hover,
+  .svc:focus-within {
+    background: linear-gradient(140deg, rgba(181, 217, 253, 0.85), rgba(89, 128, 166, 0.25), rgba(181, 217, 253, 0.6));
+  }
+}
+.svc {
+  background: rgba(255, 255, 255, 0.16);
+  transition: background 0.4s;
+  padding: 1px;
+}
+.svc-inner {
+  transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* tables scroll rather than blow out the page */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table {
+  min-width: 560px;
+}
+
+/* ── forms ───────────────────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  background: #fff;
+  border: 1px solid rgba(29, 31, 32, 0.22);
+  padding: 12px 13px;
+  min-height: 46px;
+  font-family: var(--font-body);
+  font-size: 16px; /* 16px stops iOS Safari zooming the page on focus */
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input:hover {
+  border-color: rgba(29, 31, 32, 0.4);
+}
+.input[aria-invalid='true'] {
+  border-color: #b45;
+}
+textarea.input {
+  resize: vertical;
+  min-height: 108px;
+}
+.field-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.field-err {
+  font-size: 11.5px;
+  color: #a34;
+  margin-top: 5px;
+  min-height: 15px;
+}
+
+/* range input with a comfortable touch target */
+.range {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 32px;
+  cursor: pointer;
+}
+
+/* ── modal ───────────────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(29, 45, 61, 0.68);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 3vw, 28px);
+}
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+  background: var(--bg);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+}
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .modal-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .modal-figure {
+    border-right: 1px solid rgba(29, 31, 32, 0.14);
+    border-bottom: 0;
+  }
+}
+.modal-figure {
+  position: relative;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(89, 128, 166, 0.16), transparent 70%);
+  border-bottom: 1px solid rgba(29, 31, 32, 0.14);
+}
+
+/* ── utilities ───────────────────────────────────────────────────────────── */
+.grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 300;
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 20px;
+  font-family: var(--font-head);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
+/* Long product codes and emails must never widen the page. */
+.break-word {
+  overflow-wrap: anywhere;
+}
+
+/* ── motion ──────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
