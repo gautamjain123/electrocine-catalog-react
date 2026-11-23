@@ -1,4 +1,12 @@
 @import './styles/app.css';
+@import './styles/motion.css';
+@import './styles/hero.css';
+@import './styles/pages.css';
+@import './styles/home.css';
+@import './styles/theme.css';
+@import './styles/header.css';
+@import './styles/inner.css';
+@import './styles/intro.css';
 
 @keyframes aurora{0%{transform:translate3d(-6%,-4%,0) scale(1)}50%{transform:translate3d(6%,5%,0) scale(1.18)}100%{transform:translate3d(-6%,-4%,0) scale(1)}}
 @keyframes drift{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}
@@ -29,7 +37,7 @@ body {
 
 a { color: var(--accent-dark); text-decoration: none; }
 a:hover { color: var(--navy); }
-::selection { background: rgba(89,128,166,.28); }
+::selection { background: rgba(27, 79, 156,.28); }
 
 input, textarea, select, button { font-family: inherit; }
 
@@ -57,7 +65,7 @@ img {
   position: absolute;
   width: 11px;
   height: 11px;
-  color: rgba(29,31,32,.55);
+  color: rgba(22, 33, 58,.55);
   pointer-events: none;
 }
 .blueprint > .corner::before,
@@ -75,8 +83,8 @@ img {
 
 [data-reveal] {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .8s, transform .8s;
+  transform: translateY(14px);
+  transition: opacity .6s, transform .6s;
 }
 [data-reveal][data-revealed="1"] {
   opacity: 1;

@@ -1,22 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CATS, LOGO } from '../data/catalog.js';
+import { CATS, CAT_IMG, LOGO, origOf, srcSetOf } from '../data/catalog.js';
 import { useApp } from '../lib/ui.jsx';
 
-const linkStyle = { background: 'none', border: 0, padding: '9px 13px', fontSize: 13.5, color: 'var(--ink)', cursor: 'pointer' };
-
+/* Header: logo left, links grouped in a soft pill in the middle, quote CTA
+   right. Transparent over the top of the page, a frosted solid bar once the
+   page scrolls. Products opens a mega-menu of the six families. */
 export default function Nav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { openCategory } = useApp();
+  const { openCategory, quote } = useApp();
   const [drawer, setDrawer] = useState(false);
-  const drawerRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [megaOff, setMegaOff] = useState(false);
   const burgerRef = useRef(null);
 
-  // Route changes always close the drawer.
   useEffect(() => setDrawer(false), [location.pathname]);
 
-  // Escape closes the drawer and returns focus to the button that opened it.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   useEffect(() => {
     if (!drawer) return;
     const onKey = (e) => {
@@ -39,246 +46,113 @@ export default function Nav() {
   const anchor = (hash) => (e) => {
     e.preventDefault();
     setDrawer(false);
-    if (location.pathname !== '/') {
-      navigate('/' + hash);
-    } else {
-      document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (location.pathname !== '/') navigate('/' + hash);
+    else document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const here = (path) => (location.pathname === path ? 'page' : undefined);
+  const count = quote?.length || 0;
+
   return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 80,
-        backdropFilter: 'blur(14px) saturate(140%)',
-        background: 'rgba(242,242,243,.86)',
-        borderBottom: '1px solid var(--line-soft)',
-      }}
-    >
-      <div className="container nav-bar">
-        <button
-          onClick={go('/')}
-          aria-label="Electrocine Industries — home"
-          style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', flex: '0 0 auto', background: 'none', border: 0, padding: 0 }}
-        >
-          <img src={LOGO} alt="" width="34" height="34" style={{ width: 34, height: 34, objectFit: 'contain' }} />
-          <span className="nav-wordmark" style={{ textAlign: 'left' }}>
-            <span
-              style={{
-                display: 'block',
-                fontFamily: 'var(--font-head)',
-                fontWeight: 600,
-                fontSize: 19,
-                letterSpacing: '.06em',
-                textTransform: 'uppercase',
-                color: 'var(--ink)',
-              }}
-            >
-              Electrocine
-            </span>
-            <span
-              style={{ display: 'block', fontSize: 9.5, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--muted)' }}
-            >
-              Industries
-            </span>
+    <header className={`hdr ${scrolled || drawer ? 'is-solid' : ''}`}>
+      <div className="container hdr-bar">
+        <button className="hdr-brand" onClick={go('/')} aria-label="Electrocine Industries — home">
+          <img src={LOGO} alt="" width="36" height="36" />
+          <span className="hdr-word">
+            <strong>Electrocine</strong>
+            <small>Industries</small>
           </span>
         </button>
 
-        <nav className="nav-desktop" aria-label="Primary">
-          {/* Hover and focus-within drive the panel from CSS, so it works for
-              pointer, keyboard and no-JS alike. */}
-          <div className="mega-wrap">
-            <button onClick={go('/products')} style={{ ...linkStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <nav className="hdr-links" aria-label="Primary">
+          {/* Opens on mouse hover only (keyboard users get it via Tab focus).
+              Picking anything closes it until the pointer leaves. */}
+          <div
+            className={`mega-wrap ${megaOff ? 'is-off' : ''}`}
+            onMouseLeave={() => setMegaOff(false)}
+            onClickCapture={() => setMegaOff(true)}
+          >
+            <button onClick={go('/products')} aria-current={here('/products')} aria-haspopup="true">
               Products
-              <span aria-hidden="true" style={{ fontSize: 9, color: 'var(--muted-2)' }}>
-                ▾
-              </span>
+              <svg className="hdr-caret" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
             <div className="mega">
               <div className="mega-inner">
                 {CATS.map((c) => (
                   <button key={c.id} className="mega-item" onClick={() => openCategory(c.id)}>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontFamily: 'var(--font-head)',
-                        fontSize: 16,
-                        letterSpacing: '.03em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {c.name}
+                    <span className="mega-thumb" aria-hidden="true">
+                      <img src={origOf(CAT_IMG[c.id])} srcSet={srcSetOf(CAT_IMG[c.id])} alt="" loading="lazy" />
                     </span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.4, marginTop: 2 }}>
-                      {c.blurb}
+                    <span>
+                      <span className="mega-name">{c.name}</span>
+                      <span className="mega-blurb">{c.blurb}</span>
                     </span>
                   </button>
                 ))}
-                <div
-                  style={{
-                    gridColumn: '1/-1',
-                    marginTop: 12,
-                    paddingTop: 14,
-                    borderTop: '1px solid var(--line-soft)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 16,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--muted-2)' }}>
-                    Full range · 140+ SKUs · w.e.f. July 2024
-                  </span>
-                  <button
-                    onClick={go('/products')}
-                    className="hov-accent"
-                    style={{
-                      background: 'none',
-                      border: 0,
-                      padding: '10px 4px',
-                      minHeight: 40,
-                      fontSize: 12.5,
-                      letterSpacing: '.1em',
-                      textTransform: 'uppercase',
-                      color: 'var(--accent-dark)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Browse catalogue →
-                  </button>
+                <div className="mega-foot">
+                  <span>Full range · 140+ SKUs · price list w.e.f. July 2024</span>
+                  <button onClick={go('/products')}>Browse the catalogue →</button>
                 </div>
               </div>
             </div>
           </div>
-          <button onClick={go('/about')} style={linkStyle}>
+          <button onClick={go('/about')} aria-current={here('/about')}>
             Company
           </button>
-          <a href="/#applications" onClick={anchor('#applications')} style={{ padding: '9px 13px', fontSize: 13.5, color: 'var(--ink)' }}>
+          <a href="/#applications" onClick={anchor('#applications')}>
             Applications
           </a>
-          <a href="/#technology" onClick={anchor('#technology')} style={{ padding: '9px 13px', fontSize: 13.5, color: 'var(--ink)' }}>
+          <a href="/#technology" onClick={anchor('#technology')}>
             Technology
           </a>
-          <button onClick={go('/contact')} style={linkStyle}>
+          <button onClick={go('/contact')} aria-current={here('/contact')}>
             Contact
           </button>
         </nav>
 
-        <div style={{ flex: '1 1 auto' }} />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto' }}>
-          <span
-            className="nav-badge"
-            style={{
-              alignItems: 'center',
-              gap: 7,
-              padding: '7px 12px',
-              border: '1px solid var(--line)',
-              fontSize: 11,
-              letterSpacing: '.12em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-            }}
-          >
-            <span aria-hidden="true" style={{ width: 6, height: 6, background: 'var(--accent)', animation: 'blink 2.2s infinite' }} />
-            Make in India
-          </span>
-          <button className="btn btn-primary nav-cta" onClick={go('/contact')} style={{ padding: '11px 20px', minHeight: 44, fontSize: 14 }}>
+        <div className="hdr-actions">
+          <button className="hdr-cta" onClick={go('/contact')}>
             Request quote
-            <span
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent)',
-                animation: 'sweep 3.4s ease-in-out infinite',
-              }}
-            />
+            {count > 0 && <span className="hdr-count">{count}</span>}
           </button>
           <button
             ref={burgerRef}
-            className="nav-burger"
+            className="hdr-burger"
             onClick={() => setDrawer((d) => !d)}
             aria-label={drawer ? 'Close menu' : 'Open menu'}
             aria-expanded={drawer}
             aria-controls="mobile-drawer"
-            style={{
-              width: 44,
-              height: 44,
-              flex: '0 0 auto',
-              background: 'none',
-              border: '1px solid rgba(29,31,32,.2)',
-              cursor: 'pointer',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4,
-            }}
           >
-            <span aria-hidden="true" style={{ width: 16, height: 1, background: 'var(--ink)' }} />
-            <span aria-hidden="true" style={{ width: 16, height: 1, background: 'var(--ink)' }} />
-            <span aria-hidden="true" style={{ width: 16, height: 1, background: 'var(--ink)' }} />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {drawer && (
-        <div
-          id="mobile-drawer"
-          ref={drawerRef}
-          style={{
-            borderTop: '1px solid var(--line-soft)',
-            background: 'rgba(242,242,243,.98)',
-            padding: '10px var(--gutter) 22px',
-            maxHeight: 'calc(100vh - 68px)',
-            overflowY: 'auto',
-          }}
-        >
-          <nav aria-label="Mobile">
+        <div id="mobile-drawer" className="hdr-drawer">
+          <nav aria-label="Mobile" className="container">
             {[
               { label: 'Products', to: '/products' },
               { label: 'Company', to: '/about' },
               { label: 'Contact', to: '/contact' },
               { label: 'Home', to: '/' },
             ].map((d) => (
-              <button
-                key={d.label}
-                onClick={go(d.to)}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  background: 'none',
-                  border: 0,
-                  borderBottom: '1px solid var(--line-soft)',
-                  padding: '16px 4px',
-                  minHeight: 52,
-                  fontFamily: 'var(--font-head)',
-                  fontSize: 20,
-                  letterSpacing: '.04em',
-                  textTransform: 'uppercase',
-                  color: 'var(--ink)',
-                  cursor: 'pointer',
-                }}
-              >
+              <button key={d.label} onClick={go(d.to)}>
                 {d.label}
               </button>
             ))}
-          </nav>
-          <div style={{ marginTop: 18, display: 'grid', gap: 10 }}>
-            <span style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--muted-2)' }}>
-              Families
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+            <p>Families</p>
+            <div className="hdr-drawer-pills">
               {CATS.map((c) => (
                 <button key={c.id} className="pill" onClick={() => openCategory(c.id)}>
                   {c.name}
                 </button>
               ))}
             </div>
-          </div>
+          </nav>
         </div>
       )}
     </header>

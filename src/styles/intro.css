@@ -1,0 +1,665 @@
+/* ============================================================================
+   Intro — full screen. One street light, from casting to the open road.
+
+   The scene SVG covers the whole viewport (slice). The camera (.i-cam) keeps
+   the fitting at the horizontal centre, so it stays in shot on any screen
+   shape; the foreground pillars (.i-fg) move 1.5× faster, blurred, for depth.
+   Every timed part uses the same duration (--T, 9.5 s):
+      0–16%  die-casting press stamps the raw casting into a finished housing
+     22–36%  the robot picks an LED board from the tray and fits it
+     40–54%  QC gantry scans it, the LEDs light, the monitor reads PASS
+     56–72%  into the box: flaps fold, tape runs across, label printed
+     72–82%  through the dock into the truck
+     82–100% headlights on, the truck pulls away past the street lights
+   ========================================================================= */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  color: #f4f1ea;
+  background: #050a14;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.8s cubic-bezier(0.7, 0, 0.2, 1);
+}
+.intro.is-leaving {
+  clip-path: inset(0 0 100% 0);
+}
+.intro-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  animation: intro-in 1.2s ease-out both;
+}
+@keyframes intro-in {
+  from { opacity: 0; filter: brightness(0.3); }
+  to { opacity: 1; filter: none; }
+}
+
+/* film texture + lens vignette */
+.intro-grain {
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: grain 0.5s steps(4) infinite;
+}
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); }
+  75% { transform: translate(-2%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(130% 100% at 50% 45%, transparent 50%, rgba(2, 5, 12, 0.75) 100%),
+    linear-gradient(180deg, rgba(3, 7, 15, 0.55) 0%, transparent 18%, transparent 70%, rgba(3, 7, 15, 0.85) 100%);
+}
+
+/* overlaid UI */
+.intro-brand {
+  position: absolute;
+  top: clamp(18px, 4vh, 36px);
+  left: clamp(18px, 4vw, 48px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fade-up 0.6s 0.2s both;
+}
+.intro-brand img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+}
+.intro-brand span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+.intro-brand strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+.intro-brand small {
+  margin-top: 4px;
+  font-size: 9.5px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 234, 0.6);
+}
+.intro-hud {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 5vh, 48px);
+  transform: translateX(-50%); /* transform, not translate: the fade-up animation owns translate */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(760px, 92vw);
+  animation: fade-up 0.6s 0.4s both;
+}
+
+/* ── one timeline for everything timed ── */
+.i-cam,
+.i-fg,
+.a-ram,
+.a-flash,
+.a-sparks line,
+.r-up,
+.r-fore,
+.r-pcb,
+.r-weld,
+.q-lamp,
+.q-wait,
+.q-pass,
+.q-scan,
+.p,
+.p-raw,
+.p-body,
+.p-led,
+.p-glow,
+.b,
+.b-flap-l,
+.b-flap-r,
+.b-tape,
+.b-label,
+.d-printer,
+.t,
+.t-beam,
+.t-tail,
+.t-wheel,
+.t-speed,
+.t-exhaust circle,
+.i-warn,
+.w-qc .w-arm {
+  animation-duration: var(--T);
+  animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+/* ── camera: fitting held at x = 480 (screen centre) ── */
+.i-cam {
+  animation-name: cam;
+}
+@keyframes cam {
+  0% { transform: translateX(330px); }
+  6%, 16% { transform: translateX(260px); }
+  24%, 34% { transform: translateX(-40px); }
+  42%, 52% { transform: translateX(-340px); }
+  60%, 72% { transform: translateX(-640px); }
+  81%, 83% { transform: translateX(-1110px); }
+  86% { transform: translateX(-1160px); }
+  100% { transform: translateX(-1920px); }
+}
+/* foreground parallax: 1.5× the camera */
+.i-fg {
+  animation-name: fg;
+}
+@keyframes fg {
+  0% { transform: translateX(495px); }
+  6%, 16% { transform: translateX(390px); }
+  24%, 34% { transform: translateX(-60px); }
+  42%, 52% { transform: translateX(-510px); }
+  60%, 72% { transform: translateX(-960px); }
+  81%, 83% { transform: translateX(-1665px); }
+  86% { transform: translateX(-1740px); }
+  100% { transform: translateX(-2880px); }
+}
+
+/* ── set dressing ── */
+.i-wallsign {
+  fill: #f7c66a;
+  font: 700 10px var(--font-body);
+  letter-spacing: 0.16em;
+  text-anchor: middle;
+}
+.i-plate {
+  fill: #c7d3e6;
+  font: 700 8px var(--font-body);
+  letter-spacing: 0.14em;
+  text-anchor: middle;
+}
+.i-belt-dash {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 2;
+  stroke-dasharray: 8 10;
+  animation: belt 0.9s linear infinite;
+}
+@keyframes belt {
+  to { stroke-dashoffset: -18; }
+}
+.i-roller {
+  animation: spin 0.7s linear infinite;
+}
+.i-dust circle {
+  fill: #ffe8bd;
+  opacity: 0.5;
+  animation: dust 4.2s ease-in-out infinite alternate;
+}
+@keyframes dust {
+  from { transform: translate(0, 0); opacity: 0.15; }
+  to { transform: translate(6px, -14px); opacity: 0.6; }
+}
+.i-warn {
+  animation-name: warn;
+  animation-timing-function: steps(1);
+}
+@keyframes warn {
+  0%, 8% { opacity: 0.25; }
+  9%, 14% { opacity: 1; }
+  15%, 100% { opacity: 0.25; }
+}
+
+/* ── A: press ── */
+.a-ram {
+  animation-name: ram;
+}
+@keyframes ram {
+  0%, 7% { transform: translateY(0); }
+  10% { transform: translateY(66px); }
+  11% { transform: translateY(63px); }
+  12.5% { transform: translateY(66px); }
+  16%, 100% { transform: translateY(0); }
+}
+.a-flash {
+  animation-name: flash;
+  animation-timing-function: steps(1);
+}
+@keyframes flash {
+  0%, 9.9% { opacity: 0; }
+  10% { opacity: 1; }
+  10.8% { opacity: 0.2; }
+  12.5% { opacity: 0.9; }
+  13.2%, 100% { opacity: 0; }
+}
+.a-sparks line {
+  stroke: #ffd98f;
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation-name: sparks;
+}
+.a-sparks line:nth-child(even) {
+  stroke: #fff6dc;
+}
+@keyframes sparks {
+  0%, 9.5% { opacity: 0; stroke-dasharray: 0 60; stroke-dashoffset: 0; }
+  10.5% { opacity: 1; stroke-dasharray: 8 60; stroke-dashoffset: 0; }
+  13.5%, 100% { opacity: 0; stroke-dasharray: 4 60; stroke-dashoffset: -26; }
+}
+
+/* ── B: robot arm ── */
+.r-up {
+  animation-name: r-up;
+}
+@keyframes r-up {
+  0%, 22% { transform: rotate(-80deg); }
+  27%, 30% { transform: rotate(-113deg); }
+  35%, 100% { transform: rotate(-80deg); }
+}
+.r-fore {
+  animation-name: r-fore;
+}
+@keyframes r-fore {
+  0%, 22% { transform: rotate(60deg); }
+  27%, 30% { transform: rotate(253deg); }
+  35%, 100% { transform: rotate(60deg); }
+}
+.r-pcb {
+  animation-name: r-pcb;
+  animation-timing-function: steps(1);
+}
+@keyframes r-pcb {
+  0%, 29% { opacity: 1; }
+  30%, 35% { opacity: 0; }
+  36%, 100% { opacity: 1; }
+}
+.r-weld {
+  animation-name: weld;
+  animation-timing-function: steps(1);
+}
+@keyframes weld {
+  0%, 28% { opacity: 0; }
+  28.4% { opacity: 1; }
+  28.8% { opacity: 0.1; }
+  29.2% { opacity: 1; }
+  29.6% { opacity: 0.2; }
+  30%, 100% { opacity: 0; }
+}
+
+/* ── C: QC ── */
+.q-lamp {
+  animation-name: q-lamp;
+  animation-timing-function: steps(1);
+}
+@keyframes q-lamp {
+  0%, 47% { fill: #ff5a4e; }
+  48%, 100% { fill: #3ddc84; }
+}
+.q-scan {
+  fill: #7fd0ff;
+  opacity: 0;
+  animation-name: q-scan;
+}
+@keyframes q-scan {
+  0%, 42% { opacity: 0; transform: translateY(0); }
+  43% { opacity: 0.9; }
+  47% { opacity: 0.9; transform: translateY(70px); }
+  48%, 100% { opacity: 0; transform: translateY(70px); }
+}
+.q-wait {
+  animation-name: q-wait;
+  animation-timing-function: steps(1);
+}
+@keyframes q-wait {
+  0%, 47% { opacity: 1; }
+  48%, 100% { opacity: 0; }
+}
+.q-pass {
+  animation-name: q-pass;
+  animation-timing-function: steps(1);
+}
+@keyframes q-pass {
+  0%, 47% { opacity: 0; }
+  48%, 100% { opacity: 1; }
+}
+.i-screen,
+.i-screen-ok {
+  font: 700 13px var(--font-body);
+  text-anchor: middle;
+  fill: #7fd0ff;
+}
+.i-screen-ok {
+  fill: #3ddc84;
+  font-size: 16px;
+}
+.i-screen-dim {
+  font: 500 9px var(--font-body);
+  text-anchor: middle;
+  fill: rgba(127, 208, 255, 0.6);
+}
+.i-screen-ok-b {
+  font: 700 11px var(--font-body);
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+  fill: #3ddc84;
+}
+/* the QC technician raises an arm (thumbs-up) on PASS */
+.w-arm {
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+.w-qc .w-arm {
+  animation-name: w-arm;
+}
+@keyframes w-arm {
+  0%, 48% { transform: rotate(0deg); }
+  51%, 58% { transform: rotate(-150deg); }
+  62%, 100% { transform: rotate(0deg); }
+}
+
+/* ── the fitting ── */
+.p {
+  animation-name: p-move;
+}
+@keyframes p-move {
+  0% { transform: translate(96px, 300px); opacity: 0; }
+  3% { transform: translate(110px, 300px); opacity: 1; }
+  6%, 16% { transform: translate(220px, 300px); opacity: 1; }
+  24%, 34% { transform: translate(520px, 300px); opacity: 1; }
+  42%, 52% { transform: translate(820px, 300px); opacity: 1; }
+  60%, 64% { transform: translate(1120px, 300px); opacity: 1; }
+  65%, 100% { transform: translate(1120px, 300px); opacity: 0; }
+}
+.p-raw {
+  animation-name: p-raw;
+  animation-timing-function: steps(1);
+}
+@keyframes p-raw {
+  0%, 10% { opacity: 1; }
+  10.5%, 100% { opacity: 0; }
+}
+.p-body {
+  animation-name: p-body;
+  animation-timing-function: steps(1);
+}
+@keyframes p-body {
+  0%, 10% { opacity: 0; }
+  10.5%, 100% { opacity: 1; }
+}
+.p-led {
+  animation-name: p-led;
+  animation-timing-function: steps(1);
+}
+@keyframes p-led {
+  0%, 29.5% { opacity: 0; }
+  30%, 100% { opacity: 1; }
+}
+.p-chip {
+  fill: #e8f3ff;
+}
+.p-glow {
+  animation-name: p-glow;
+  animation-timing-function: steps(1);
+}
+@keyframes p-glow {
+  0%, 44% { opacity: 0; }
+  44.5% { opacity: 0.8; }
+  45% { opacity: 0.1; }
+  45.6% { opacity: 1; }
+  46.2% { opacity: 0.35; }
+  47%, 100% { opacity: 1; }
+}
+
+/* ── D: box ── */
+.b {
+  animation-name: b-move;
+}
+@keyframes b-move {
+  0%, 54% { transform: translate(1120px, 300px) scale(0.85); opacity: 0; }
+  57% { transform: translate(1120px, 300px) scale(1); opacity: 1; }
+  72% { transform: translate(1120px, 300px); opacity: 1; }
+  81% { transform: translate(1620px, 300px); opacity: 1; }
+  82%, 100% { transform: translate(1630px, 300px); opacity: 0; }
+}
+.b-flap {
+  transform-box: fill-box;
+}
+.b-flap-l {
+  transform-origin: left center;
+  animation-name: flap-l;
+}
+.b-flap-r {
+  transform-origin: right center;
+  animation-name: flap-r;
+}
+@keyframes flap-l {
+  0%, 64% { transform: rotate(-118deg); }
+  67%, 100% { transform: rotate(0deg); }
+}
+@keyframes flap-r {
+  0%, 65% { transform: rotate(118deg); }
+  68%, 100% { transform: rotate(0deg); }
+}
+.b-tape {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation-name: tape;
+}
+@keyframes tape {
+  0%, 68% { transform: scaleX(0); }
+  70.5%, 100% { transform: scaleX(1); }
+}
+.b-label {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: label;
+}
+@keyframes label {
+  0%, 70.5% { opacity: 0; transform: translateY(-8px); }
+  71.5%, 100% { opacity: 1; transform: none; }
+}
+.d-printer {
+  animation-name: printer;
+}
+@keyframes printer {
+  0%, 69% { transform: translateY(0); }
+  70.5% { transform: translateY(36px); }
+  72.5%, 100% { transform: translateY(0); }
+}
+.b-brand {
+  fill: #1b4f9c;
+  font: 400 10.5px var(--font-display);
+  letter-spacing: 0.04em;
+  text-anchor: middle;
+}
+.b-sub {
+  fill: #6b4a22;
+  font: 700 5.5px var(--font-body);
+  letter-spacing: 0.1em;
+  text-anchor: middle;
+}
+
+/* ── E: truck ── */
+.t {
+  animation-name: t-move;
+}
+@keyframes t-move {
+  0%, 81% { transform: translate(1560px, 340px); }
+  81.6% { transform: translate(1560px, 343px); }
+  82.4% { transform: translate(1560px, 340px); }
+  85% { transform: translate(1590px, 340px); }
+  100% { transform: translate(2520px, 340px); }
+}
+.t-brand {
+  fill: #1b4f9c;
+  font: 400 24px var(--font-display);
+  letter-spacing: 0.03em;
+  text-anchor: middle;
+}
+.t-sub {
+  fill: #7a8291;
+  font: 700 8px var(--font-body);
+  letter-spacing: 0.18em;
+  text-anchor: middle;
+}
+.t-beam {
+  animation-name: t-beam;
+  animation-timing-function: steps(1);
+}
+@keyframes t-beam {
+  0%, 82% { opacity: 0; }
+  82.5% { opacity: 0.7; }
+  83% { opacity: 0.15; }
+  83.5%, 100% { opacity: 1; }
+}
+.t-tail {
+  animation-name: t-tail;
+  animation-timing-function: steps(1);
+}
+@keyframes t-tail {
+  0%, 82% { fill: #6a2020; }
+  82.5%, 100% { fill: #ff4b4b; }
+}
+.t-wheel {
+  animation-name: wheel;
+}
+@keyframes wheel {
+  0%, 84% { transform: rotate(0deg); }
+  100% { transform: rotate(1800deg); }
+}
+.t-speed rect {
+  fill: rgba(220, 230, 255, 0.35);
+}
+.t-speed {
+  animation-name: speed;
+}
+@keyframes speed {
+  0%, 88% { opacity: 0; transform: translateX(20px); }
+  92%, 100% { opacity: 1; transform: translateX(0); }
+}
+.t-exhaust circle {
+  fill: rgba(200, 210, 230, 0.3);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: exhaust;
+}
+.t-exhaust circle:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.t-exhaust circle:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes exhaust {
+  0%, 83% { opacity: 0; transform: scale(0.4); }
+  87% { opacity: 1; transform: translate(-10px, -8px) scale(1); }
+  92%, 100% { opacity: 0; transform: translate(-30px, -22px) scale(1.7); }
+}
+
+/* ── steps + progress ── */
+.intro-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.intro-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(244, 241, 234, 0.45);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  transition: color 0.3s;
+}
+.intro-step-dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(5, 10, 20, 0.5);
+  font-size: 12px;
+  transition: background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.intro-steps li[data-state='active'] {
+  color: #fff;
+}
+.intro-steps li[data-state='active'] .intro-step-dot {
+  border-color: var(--accent-light);
+  color: var(--accent-light);
+  box-shadow: 0 0 0 4px rgba(247, 198, 106, 0.2);
+}
+.intro-steps li[data-state='done'] {
+  color: rgba(244, 241, 234, 0.8);
+}
+.intro-steps li[data-state='done'] .intro-step-dot {
+  background: var(--accent-light);
+  border-color: var(--accent-light);
+  color: var(--ink);
+}
+.intro-bar {
+  width: min(420px, 70vw);
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+.intro-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-light), #fff);
+  transform-origin: left;
+  animation: intro-bar var(--T) linear both;
+}
+@keyframes intro-bar {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.intro-skip {
+  position: absolute;
+  top: clamp(18px, 4vh, 36px);
+  right: clamp(18px, 4vw, 48px);
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(5, 10, 20, 0.45);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(244, 241, 234, 0.85);
+  cursor: pointer;
+}
+.intro-skip:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+@media (max-width: 640px) {
+  .intro-steps {
+    gap: 8px 14px;
+  }
+  .intro-steps li {
+    font-size: 12px;
+  }
+  .intro-brand strong {
+    font-size: 22px;
+  }
+}

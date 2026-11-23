@@ -1,0 +1,404 @@
+/* ============================================================================
+   Header — transparent over the page top, frosted solid bar on scroll.
+   Loaded after theme.css.
+   ========================================================================= */
+
+.hdr {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  background: rgba(250, 250, 248, 0);
+  border-bottom: 1px solid transparent;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.hdr.is-solid {
+  background: rgba(250, 250, 248, 0.86);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  border-bottom-color: var(--line);
+  box-shadow: 0 8px 30px -20px rgba(13, 19, 33, 0.35);
+}
+.hdr-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 68px;
+}
+
+/* brand */
+.hdr-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.hdr-brand img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.hdr-word {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  text-align: left;
+}
+.hdr-word strong {
+  font-family: var(--font-display);
+  font-weight: 450;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.hdr-word small {
+  margin-top: 3px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+/* links: one soft pill, centred */
+.hdr-links {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .hdr-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0 auto;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--line-soft);
+    box-shadow: 0 1px 2px rgba(13, 19, 33, 0.04);
+  }
+}
+.hdr-links > button,
+.hdr-links > a,
+.hdr-links .mega-wrap > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.hdr-links > button:hover,
+.hdr-links > a:hover,
+.hdr-links .mega-wrap > button:hover,
+.hdr-links .mega-wrap:hover > button,
+.hdr-links .mega-wrap:has(:focus-visible) > button {
+  background: var(--bg-2);
+  color: var(--ink);
+}
+.hdr-links [aria-current='page'] {
+  background: var(--ink) !important;
+  color: #fff !important;
+}
+.hdr-caret {
+  flex: none;
+  margin-left: 2px;
+  opacity: 0.7;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
+}
+.mega-wrap:hover .hdr-caret,
+.mega-wrap:has(:focus-visible) .hdr-caret {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+/* after a choice is made the menu stays shut until the pointer leaves */
+.mega-wrap.is-off .mega {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+.mega-wrap.is-off .hdr-caret {
+  transform: none;
+}
+
+/* actions */
+.hdr-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+@media (min-width: 1024px) {
+  .hdr-actions {
+    margin-left: 0;
+  }
+}
+.hdr-phone {
+  display: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.hdr-phone:hover {
+  color: var(--accent);
+}
+@media (min-width: 1280px) {
+  .hdr-phone {
+    display: inline;
+  }
+}
+.hdr-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.25s;
+}
+.hdr-cta:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 0 0 5px rgba(242, 164, 58, 0.22);
+}
+.hdr-count {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--glow);
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+@media (max-width: 379px) {
+  .hdr-cta {
+    display: none;
+  }
+}
+.hdr-burger {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+}
+.hdr-burger span {
+  width: 16px;
+  height: 1.5px;
+  background: var(--ink);
+  transition: transform 0.25s;
+}
+.hdr-burger[aria-expanded='true'] span:first-child {
+  transform: translateY(3.75px) rotate(45deg);
+}
+.hdr-burger[aria-expanded='true'] span:last-child {
+  transform: translateY(-3.75px) rotate(-45deg);
+}
+@media (min-width: 1024px) {
+  .hdr-burger {
+    display: none;
+  }
+}
+@media (max-width: 359px) {
+  .hdr-word {
+    display: none;
+  }
+}
+
+/* mega menu */
+.hdr .mega {
+  left: 50%;
+  translate: -30% 0;
+  padding-top: 14px;
+}
+.hdr .mega-inner {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--shadow-lg);
+}
+.hdr .mega-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+.hdr .mega-item:hover {
+  background: var(--bg-2);
+}
+.hdr .mega-thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  padding: 6px;
+}
+.hdr .mega-thumb img {
+  mix-blend-mode: multiply;
+}
+.mega-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--ink);
+}
+.mega-blurb {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.mega-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 12px 10px 2px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+  color: var(--muted-2);
+}
+.mega-foot button {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* mobile drawer */
+.hdr-drawer {
+  max-height: calc(100svh - 68px);
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.hdr-drawer nav {
+  padding-block: 8px 24px;
+}
+.hdr-drawer nav > button {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font-family: var(--font-display);
+  font-size: 26px;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.hdr-drawer p {
+  margin: 20px 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.hdr-drawer-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── no visible scrollbars anywhere ───────────────────────────────────────
+   Scrolling still works by wheel, trackpad, touch and keyboard; only the bars
+   themselves are hidden (page and any inner scroller). */
+html,
+body,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ── footer brand ── */
+.foot-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.foot-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+.foot-brand-mark img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.foot-brand-word {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+.foot-brand-word strong {
+  font-family: var(--font-display);
+  font-weight: 450;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.foot-brand-word small {
+  margin-top: 4px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(251, 248, 243, 0.55);
+}

@@ -1,4 +1,5 @@
 import { Component, createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 /* ── scroll reveal ──
    Elements opt in with `data-reveal`. A 2600 ms fallback reveals anything the
@@ -137,6 +138,30 @@ export function useDialog(open, onClose) {
   }, [open, onClose]);
 
   return ref;
+}
+
+/* Breadcrumb trail for the dark page headers: Home / <here>. */
+export function Crumbs({ here }) {
+  const navigate = useNavigate();
+  return (
+    <nav aria-label="Breadcrumb" className="crumbs">
+      <ol>
+        <li>
+          <button
+            onClick={() => {
+              navigate('/');
+              window.scrollTo(0, 0);
+            }}
+            className="crumb"
+          >
+            Home
+          </button>
+        </li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page">{here}</li>
+      </ol>
+    </nav>
+  );
 }
 
 /* Blueprint registration marks — the four corner ticks used across the design system. */

@@ -1,8 +1,9 @@
-import { CATS } from '../data/catalog.js';
+import { CATS, MODELS, siblingsOf, variantLabel } from '../data/catalog.js';
 import { useApp, useDialog, Corners } from '../lib/ui.jsx';
+import ProductShot from './ProductShot.jsx';
 
 export default function ProductModal() {
-  const { detail, closeDetail, quoteFromDetail, priceOf } = useApp();
+  const { detail, closeDetail, quoteFromDetail, priceOf, openDetail } = useApp();
   const dialogRef = useDialog(!!detail, closeDetail);
 
   if (!detail) return null;
@@ -18,6 +19,8 @@ export default function ProductModal() {
     { k: 'Input voltage', v: '110–270 V, 50 Hz AC' },
   ];
   const catName = CATS.find((c) => c.id === detail.cat)?.name || '';
+  const variants = siblingsOf(detail);
+  const related = MODELS.filter((m) => m.cat === detail.cat && !m.variants.includes(detail) && m.img !== detail.img).slice(0, 4);
 
   return (
     <div className="modal-backdrop" onClick={closeDetail}>
@@ -41,8 +44,8 @@ export default function ProductModal() {
             zIndex: 2,
             width: 40,
             height: 40,
-            background: 'rgba(242,242,243,.92)',
-            border: '1px solid rgba(29,31,32,.2)',
+            background: 'rgba(251, 248, 243,.92)',
+            border: '1px solid rgba(22, 33, 58,.2)',
             cursor: 'pointer',
             fontSize: 16,
             color: 'var(--ink)',
@@ -51,29 +54,8 @@ export default function ProductModal() {
           ✕
         </button>
         <div className="modal-grid">
-          <div className="modal-figure">
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.5,
-                backgroundImage:
-                  'linear-gradient(rgba(29,31,32,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(29,31,32,.05) 1px,transparent 1px)',
-                backgroundSize: '30px 30px',
-              }}
-            />
-            <img
-              src={detail.img}
-              alt={detail.name}
-              style={{
-                position: 'relative',
-                maxWidth: '74%',
-                maxHeight: 280,
-                objectFit: 'contain',
-                animation: 'drift 6s ease-in-out infinite',
-              }}
-            />
+          <div className="modal-figure shot-host">
+            <ProductShot key={detail.img} src={detail.img} alt={detail.name} lit loading="eager" className="modal-shot" />
           </div>
           <div style={{ padding: 'clamp(22px,4vw,34px) clamp(18px,3vw,32px)' }}>
             <div style={{ fontSize: 10.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 10 }}>
@@ -89,6 +71,15 @@ export default function ProductModal() {
             <div className="break-word" style={{ fontSize: 12.5, letterSpacing: '.06em', color: 'var(--muted-2)', marginBottom: 22 }}>
               {detail.code}
             </div>
+            {variants.length > 1 && (
+              <div className="model-variants modal-variants" role="group" aria-label="Other wattages of this fitting">
+                {variants.map((v) => (
+                  <button key={v.code} type="button" className="variant" aria-pressed={v.code === detail.code} onClick={() => openDetail(v)}>
+                    {variantLabel(v, variants)}
+                  </button>
+                ))}
+              </div>
+            )}
             <dl style={{ margin: 0 }}>
               {rows.map((r) => (
                 <div
@@ -98,7 +89,7 @@ export default function ProductModal() {
                     gridTemplateColumns: '1fr auto',
                     gap: 16,
                     padding: '9px 0',
-                    borderBottom: '1px dashed rgba(29,31,32,.16)',
+                    borderBottom: '1px dashed rgba(22, 33, 58,.16)',
                     alignItems: 'baseline',
                   }}
                 >
@@ -116,7 +107,7 @@ export default function ProductModal() {
                 flexWrap: 'wrap',
                 margin: '22px 0 20px',
                 paddingTop: 16,
-                borderTop: '1px solid rgba(29,31,32,.18)',
+                borderTop: '1px solid rgba(22, 33, 58,.18)',
               }}
             >
               <span style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--muted-2)' }}>
@@ -129,6 +120,21 @@ export default function ProductModal() {
             </button>
           </div>
         </div>
+        {related.length > 0 && (
+          <div className="modal-related">
+            <h3>More in {catName}</h3>
+            <ul>
+              {related.map((m) => (
+                <li key={m.key}>
+                  <button type="button" className="shot-host" onClick={() => openDetail(m.variants[0])}>
+                    <ProductShot src={m.img} alt="" reflect={false} />
+                    <span>{m.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

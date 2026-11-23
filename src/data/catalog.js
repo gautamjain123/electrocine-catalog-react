@@ -5,31 +5,72 @@
 // exceed the asset API's 256 KiB read cap. Each is aliased below to the closest fitting in
 // the same family so the catalogue renders complete. Drop the real PNGs into public/cat/
 // and point the alias back at its own file to restore them.
+//
+// Paths point at the enhanced plates in public/cat/hd/ (trimmed, upscaled, sharpened
+// and levelled by scripts/enhance-images.py). Re-run that script after adding a PNG.
 export const IMG = {
-  slimRecess: 'cat/p04.png', //  ← p03.png (aliased: surface panel)
-  surfacePanel: 'cat/p04.png',
-  tube: 'cat/p21.png', //  ← p05.png (aliased: linear profile)
-  backlitRecess: 'cat/p08.png', //  ← p06.png (aliased: designer backlit panel)
-  backlitSurface: 'cat/p08.png', //  ← p07.png (aliased: designer backlit panel)
-  designer: 'cat/p08.png',
-  flood: 'cat/p11.png', //  ← p09.png (aliased: wall pack)
-  street: 'cat/p10.png',
-  wallpack: 'cat/p11.png',
-  inground: 'cat/p12.png',
-  wallBracket: 'cat/p13.png',
-  gateLantern: 'cat/p14.png',
-  postTop: 'cat/p15.png',
-  highbay: 'cat/p16.png',
-  wallWasher: 'cat/p17.png',
-  spike: 'cat/p12.png', //  ← p18.png (aliased: inground)
-  bollard: 'cat/p19.png',
-  bollardDeco: 'cat/p20.png',
-  profile: 'cat/p21.png',
-  profileSusp: 'cat/p22.png',
-  pendant: 'cat/p22.png', //  ← p23.png (aliased: suspended profile)
+  slimRecess: '/cat/hd/p04.webp', //  ← p03.png (aliased: surface panel)
+  surfacePanel: '/cat/hd/p04.webp',
+  tube: '/cat/hd/p21.webp', //  ← p05.png (aliased: linear profile)
+  backlitRecess: '/cat/hd/p08.webp', //  ← p06.png (aliased: designer backlit panel)
+  backlitSurface: '/cat/hd/p08.webp', //  ← p07.png (aliased: designer backlit panel)
+  designer: '/cat/hd/p08.webp',
+  flood: '/cat/hd/p11.webp', //  ← p09.png (aliased: wall pack)
+  street: '/cat/hd/p10.webp',
+  wallpack: '/cat/hd/p11.webp',
+  inground: '/cat/hd/p12.webp',
+  wallBracket: '/cat/hd/p13.webp',
+  gateLantern: '/cat/hd/p14.webp',
+  postTop: '/cat/hd/p15.webp',
+  highbay: '/cat/hd/p16.webp',
+  wallWasher: '/cat/hd/p17.webp',
+  spike: '/cat/hd/p12.webp', //  ← p18.png (aliased: inground)
+  bollard: '/cat/hd/p19.webp',
+  bollardDeco: '/cat/hd/p20.webp',
+  profile: '/cat/hd/p21.webp',
+  profileSusp: '/cat/hd/p22.webp',
+  pendant: '/cat/hd/p22.webp', //  ← p23.png (aliased: suspended profile)
+  // Real photographs cropped 1:1 (no resampling) from the Instagram posters.
+  igMushroom: '/ig/mushroom-bollard.jpg', // 330×820
+  igSpark: '/ig/spark-post-top.jpg', // 449×675
 };
 
-export const LOGO = 'uploads/logo_assets-1785825947280.png';
+/* Pixel-true sources: the original catalogue PNG is served to 1x screens, the
+   enhanced 2x plate only to high-density screens. Never stretched past native. */
+export const origOf = (src) => src.replace('/cat/hd/', '/cat/').replace('.webp', '.png');
+export const srcSetOf = (src) => (src.startsWith('/cat/hd/') ? `${origOf(src)} 1x, ${src} 2x` : undefined);
+
+/* Product posters from instagram.com/electrocine, stored byte-for-byte as
+   Instagram serves them (its largest size). Shown at or below native width. */
+export const INSTAGRAM_URL = 'https://www.instagram.com/electrocine/';
+export const INSTAGRAM_POSTS = [
+  {
+    src: '/ig/post-spark-post-top.jpg',
+    w: 1024,
+    h: 1360,
+    href: 'https://www.instagram.com/p/DcNtVo5xt5d/',
+    title: 'Spark — 36 W LED Post Top',
+    blurb: 'Swarovski PC diffuser with a diamond-like light pattern, die-cast aluminium base, IP65.',
+  },
+  {
+    src: '/ig/post-mushroom-bollard.jpg',
+    w: 1056,
+    h: 1296,
+    href: 'https://www.instagram.com/p/DcVk-ppRkzA/',
+    title: 'Mushroom Bollard — 10 W',
+    blurb: '175 × 500 mm, inbuilt mounting plate, Philips driver, IP65.',
+  },
+  {
+    src: '/ig/post-bulkhead-9w.jpg',
+    w: 1024,
+    h: 1360,
+    href: 'https://www.instagram.com/p/DcQJ2I5RbJQ/',
+    title: '9 W LED Bulkhead',
+    blurb: 'Impact-resistant polycarbonate, surface mounted, IP65 for walls, stairwells and parking.',
+  },
+];
+
+export const LOGO = '/uploads/logo_assets-1785825947280.png';
 
 export const CONTACT_EMAIL = 'electrocine_hk@yahoo.co.in';
 
@@ -102,6 +143,21 @@ export const PRODUCTS = [
   P('landscape', '18 W Bollard — Decorative', 'EIL.BD.18D', 18, '1700 Lm', '900 mm', 'P.O.R', IMG.bollardDeco, 'Ground', { ip: 'IP65' }),
   P('landscape', '24 W Post-Top Lantern', 'EIL.PT.24', 24, '2400 Lm', '450×320', 'P.O.R', IMG.postTop, 'Pole', { ip: 'IP65' }),
   P('landscape', '18 W Gate Lantern', 'EIL.GL.18', 18, '1800 Lm', '400×260', 'P.O.R', IMG.gateLantern, 'Pole', { ip: 'IP65' }),
+  // New launches from instagram.com/electrocine (Aug 2026). The posts give watts,
+  // size, IP and CCT only — lumens and price stay "on request" rather than guessed,
+  // and the codes are provisional placeholders until the real SKU codes are known.
+  P('landscape', '10 W Mushroom Bollard', 'NEW.MUSHROOM.10', 10, 'On request', '175×500', 'P.O.R', IMG.igMushroom, 'Ground', {
+    ip: 'IP65',
+    photo: true,
+    cct: 'CW · WW · NW',
+    isNew: true,
+  }),
+  P('landscape', '36 W Spark LED Post Top', 'NEW.SPARK.36', 36, 'On request', '—', 'P.O.R', IMG.igSpark, 'Pole', {
+    ip: 'IP65',
+    photo: true,
+    cct: 'CW · WW · NW',
+    isNew: true,
+  }),
   // Decorative
   P('decor', '36 W Hexagon Pendant', 'EIL.HP.36', 36, '3600 Lm', '600×520', 'P.O.R', IMG.pendant, 'Suspended'),
   P('decor', '48 W Hexagon Pendant', 'EIL.HP.48', 48, '4800 Lm', '800×690', 'P.O.R', IMG.pendant, 'Suspended'),
@@ -144,6 +200,7 @@ export const SPEC_SETS = {
 
 // Inline SVG path data for the icon set — rendered inside a shared 24×24 stroked <svg>.
 export const ICON = {
+  instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5v.01"/>',
   factory: '<path d="M2 20h20"/><path d="M4 20V9l5 3V9l5 3V9l5 3v8"/><path d="M8 20v-4h4v4"/>',
   doc: '<path d="M14 3v5h5"/><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M9 13h6M9 17h4"/>',
   truck: '<path d="M2 17h1V7h11v10h-1"/><path d="M14 10h4l3 3v4h-2"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
@@ -319,7 +376,8 @@ export const CONTACT_CARDS = [
     href: `mailto:${CONTACT_EMAIL}`,
     note: 'As printed in the catalogue — confirm before publishing.',
   },
-  { label: 'Telephone', value: '+91 — placeholder', note: 'Send us the number for the sales desk.' },
+  { label: 'Telephone', value: '+91 99997 15850', href: 'tel:+919999715850', note: 'Also +91 98100 41120 — as listed on instagram.com/electrocine.' },
+  { label: 'Website', value: 'electrocineindustries.com', href: 'https://www.electrocineindustries.com', note: 'Listed on the company Instagram profile.' },
   { label: 'Works address', value: 'Placeholder — awaiting address', note: 'Required for the map embed and tender documents.' },
 ];
 
@@ -338,9 +396,9 @@ export const ENQUIRY_TYPES = ['Distributor', 'Government tender', 'Project / con
 // Real destinations rather than href="#": the mail link works today, the other
 // two are the only two placeholders left in the footer.
 export const SOCIALS = [
-  { name: 'LinkedIn', icon: ICON.linkedin, href: 'https://www.linkedin.com/', external: true },
+  { name: 'Instagram @electrocine', icon: ICON.instagram, href: 'https://www.instagram.com/electrocine/', external: true },
   { name: `Email ${CONTACT_EMAIL}`, icon: ICON.mail, href: `mailto:${CONTACT_EMAIL}` },
-  { name: 'Telephone — number pending', icon: ICON.phone, href: 'tel:' },
+  { name: 'Telephone +91 99997 15850', icon: ICON.phone, href: 'tel:+919999715850' },
 ];
 
 export const BENTO_IMGS = [IMG.backlitRecess, IMG.tube, IMG.surfacePanel, IMG.street, IMG.bollardDeco, IMG.pendant];
@@ -353,3 +411,41 @@ export const COUNTER_LABELS = [
   'States supplied',
   'Technical desk turnaround (hrs)',
 ];
+
+/* ── models ──
+   The price list is one row per wattage, so the same photograph repeats for every
+   size of a fitting. A model groups those rows ("24 W Backlit Panel — Recess" and
+   its siblings → "Backlit Panel — Recess") so the catalogue can show each fitting
+   once, large, with its wattages as variants. */
+export const modelName = (p) => p.name.replace(/^\d+\s*W\s+/, '');
+const modelKey = (p) => `${p.cat}|${modelName(p)}`;
+
+export const MODELS = (() => {
+  const byKey = new Map();
+  PRODUCTS.forEach((p) => {
+    const k = modelKey(p);
+    if (!byKey.has(k)) byKey.set(k, { key: k, cat: p.cat, name: modelName(p), img: p.img, mount: p.mount, variants: [] });
+    byKey.get(k).variants.push(p);
+  });
+  return Array.from(byKey.values()).map((m) => ({ ...m, variants: m.variants.sort((a, b) => a.watt - b.watt) }));
+})();
+
+export const siblingsOf = (p) => MODELS.find((m) => m.key === modelKey(p))?.variants || [p];
+
+/* Short variant label; adds the size when two variants share a wattage. */
+export const variantLabel = (p, variants) =>
+  variants.filter((v) => v.watt === p.watt).length > 1 ? `${p.watt} W · ${p.dim}` : `${p.watt} W`;
+
+/* null when the lumen figure is not published (e.g. "On request"). */
+export const efficacy = (p) => {
+  const lm = parseInt(p.lumens, 10);
+  return Number.isFinite(lm) ? Math.round(lm / p.watt) : null;
+};
+
+/* Models with genuine photography, used where the catalogue is put on show. */
+export const FEATURED_MODELS = ['LED Street Light', 'Backlit Panel — Recess', 'Post-Top Lantern', 'LED High Bay', 'Bollard — Decorative', 'Inground Light', 'Linear Wall Washer', 'Gate Lantern']
+  .map((n) => MODELS.find((m) => m.name === n))
+  .filter(Boolean);
+
+/* One representative photograph per family, in CATS order. */
+export const CAT_IMG = { panel: IMG.backlitRecess, batten: IMG.tube, down: IMG.surfacePanel, street: IMG.street, landscape: IMG.postTop, decor: IMG.wallBracket };

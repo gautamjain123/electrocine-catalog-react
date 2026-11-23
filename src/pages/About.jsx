@@ -1,137 +1,152 @@
 import { useNavigate } from 'react-router-dom';
-import { PILLARS, TIMELINE } from '../data/catalog.js';
-import { Corners, GridLines } from '../lib/ui.jsx';
+import { CATS, CAT_IMG, IMG, MODELS, PILLARS, PRODUCTS, TIMELINE, origOf, srcSetOf } from '../data/catalog.js';
+import { useApp, useReveal } from '../lib/ui.jsx';
+import PageHead from '../components/PageHead.jsx';
+
+/* The fitting each milestone introduced, so the history reads as a product story. */
+const ERA = [
+  { img: IMG.tube, caption: 'T8 retrofit tube' },
+  { img: IMG.surfacePanel, caption: 'Surface panel' },
+  { img: IMG.street, caption: 'Die-cast street light' },
+  { img: IMG.backlitRecess, caption: 'Backlit recess panel' },
+  { img: IMG.postTop, caption: 'Post-top lantern' },
+];
+
+const FACTS = [
+  { v: CATS.length, k: 'Product families' },
+  { v: MODELS.length, k: 'Fittings in the series' },
+  { v: PRODUCTS.length, k: 'Listed wattages' },
+  { v: '110–270 V', k: 'Driver input range' },
+];
 
 export default function About() {
   const navigate = useNavigate();
+  const { openCategory } = useApp();
+  useReveal();
+  const go = (to) => () => {
+    navigate(to);
+    window.scrollTo(0, 0);
+  };
 
   return (
-    <main id="main">
-      <section
-        className="on-dark"
-        style={{ position: 'relative', overflow: 'hidden', background: 'var(--navy)', color: 'var(--bg)', paddingBlock: 'clamp(40px,6vw,64px) clamp(56px,8vw,84px)' }}
-      >
-        <GridLines />
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: '-50%',
-            right: '-6%',
-            width: '48vw',
-            height: '48vw',
-            borderRadius: '50%',
-            filter: 'blur(100px)',
-            opacity: 0.4,
-            background: 'radial-gradient(circle,#5980a6,transparent 68%)',
-            animation: 'aurora 24s ease-in-out infinite',
-          }}
-        />
-        <div className="container" style={{ position: 'relative' }}>
-          <nav aria-label="Breadcrumb" style={{ marginBottom: 22 }}>
-            <ol style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'rgba(242,242,243,.5)', listStyle: 'none', margin: 0, padding: 0 }}>
-              <li>
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    window.scrollTo(0, 0);
-                  }}
-                  className="crumb"
-                >
-                  Home
-                </button>
+    <main id="main" className="inner">
+      <PageHead
+        here="Company"
+        kicker="Electrocine Industries"
+        title={
+          <>
+            An Indian maker of <em>LED luminaires.</em>
+          </>
+        }
+        lead="We design, build and document the fittings ourselves — so the figure on the price list is the figure on the test report."
+        aside={
+          <dl className="ph-facts ph-facts-2">
+            {FACTS.map((f) => (
+              <div key={f.k}>
+                <dd>{f.v}</dd>
+                <dt>{f.k}</dt>
+              </div>
+            ))}
+          </dl>
+        }
+      />
+
+      {/* ── principles ── */}
+      <section data-reveal className="container in-sec">
+        <div className="in-cols">
+          {PILLARS.map((p, i) => (
+            <article key={p.kicker}>
+              <span className="in-no">0{i + 1} · {p.kicker}</span>
+              <h2>{p.title}</h2>
+              <p>{p.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ── timeline ── */}
+      <section data-reveal className="in-sand">
+        <div className="container in-sec">
+          <p className="t-kicker" style={{ color: 'var(--accent)' }}>
+            Company journey
+          </p>
+          <h2 className="in-title">
+            From a single fitting to a <em>full series.</em>
+          </h2>
+          <ol className="tl">
+            {TIMELINE.map((t, i) => (
+              <li key={t.year}>
+                <span className="tl-year">{t.year}</span>
+                <div className="tl-copy">
+                  <h3>{t.title}</h3>
+                  <p>{t.body}</p>
+                </div>
+                {ERA[i] && (
+                  <figure className="tl-fig">
+                    <img src={origOf(ERA[i].img)} srcSet={srcSetOf(ERA[i].img)} alt={ERA[i].caption} loading="lazy" />
+                    <figcaption>{ERA[i].caption}</figcaption>
+                  </figure>
+                )}
               </li>
-              <li aria-hidden="true">/</li>
-              <li style={{ color: 'var(--accent-light)' }} aria-current="page">
-                Company
-              </li>
-            </ol>
-          </nav>
-          <h1 className="t-h1" style={{ fontSize: 'clamp(34px,6vw,70px)', lineHeight: 0.98, margin: '0 0 18px', maxWidth: '22ch' }}>
-            An Indian manufacturer of LED luminaires.
-          </h1>
-          <p className="t-lead" style={{ color: 'rgba(242,242,243,.7)', maxWidth: '64ch', margin: 0 }}>
-            We design, build and document the fittings ourselves — so the figure on the price list is the figure on the test
-            report.
+            ))}
+          </ol>
+          <p className="in-note">
+            Milestone years and descriptions are placeholders — the catalogue does not carry company history. Send the real dates
+            and they will be swapped in verbatim.
           </p>
         </div>
       </section>
 
-      <section className="container section-y">
-        <div className="g g-cards" style={{ marginBottom: 'clamp(56px,8vw,96px)' }}>
-          {PILLARS.map((p) => (
-            <article
-              key={p.kicker}
-              className="blueprint hov-cert"
-              style={{ position: 'relative', padding: '32px 28px', background: 'linear-gradient(#fff,rgba(255,255,255,.35))' }}
-            >
-              <Corners />
-              <p style={{ fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--accent)', margin: '0 0 16px' }}>
-                {p.kicker}
-              </p>
-              <h2 className="t-h3" style={{ fontSize: 'clamp(21px,2.4vw,27px)', marginBottom: 12 }}>
-                {p.title}
-              </h2>
-              <p style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0 }}>{p.body}</p>
-            </article>
-          ))}
+      {/* ── the range today ── */}
+      <section data-reveal className="container in-sec">
+        <div className="h-head">
+          <div>
+            <p className="t-kicker" style={{ color: 'var(--accent)' }}>
+              The range today
+            </p>
+            <h2 className="h-title">
+              What we <em>build</em> today.
+            </h2>
+          </div>
+          <button className="btn-outline" onClick={go('/products')}>
+            Full catalogue →
+          </button>
         </div>
-
-        <p className="t-kicker" style={{ color: 'var(--accent)' }}>
-          Company journey
-        </p>
-        <h2 className="t-h2" style={{ marginBottom: 44, maxWidth: '20ch' }}>
-          From a single fitting to a full series.
-        </h2>
-        <ol style={{ borderLeft: '1px solid rgba(29,31,32,.2)', listStyle: 'none', margin: 0, padding: 0 }}>
-          {TIMELINE.map((t) => (
-            <li
-              key={t.year}
-              style={{
-                position: 'relative',
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0,1fr)',
-                gap: 10,
-                padding: '0 0 44px 34px',
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{ position: 'absolute', left: -6, top: 6, width: 11, height: 11, background: 'var(--bg)', border: '1px solid var(--accent)' }}
-              />
-              <div className="g g-timeline">
-                <div style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 'clamp(24px,3vw,30px)', lineHeight: 1, color: 'var(--accent)' }}>
-                  {t.year}
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      fontFamily: 'var(--font-head)',
-                      fontWeight: 600,
-                      fontSize: 'clamp(19px,2.2vw,23px)',
-                      letterSpacing: '.02em',
-                      textTransform: 'uppercase',
-                      margin: '0 0 8px',
-                    }}
-                  >
-                    {t.title}
-                  </h3>
-                  <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0, maxWidth: '64ch' }}>{t.body}</p>
-                </div>
-              </div>
+        <ol className="h-index">
+          {CATS.map((c, i) => (
+            <li key={c.id}>
+              <button type="button" className="h-index-row" onClick={() => openCategory(c.id)}>
+                <span className="h-index-no">{String(i + 1).padStart(2, '0')}</span>
+                <span className="h-index-name">{c.name}</span>
+                <span className="h-index-blurb">{c.blurb}</span>
+                <span className="h-index-meta">
+                  {c.range}
+                  <small>{MODELS.filter((m) => m.cat === c.id).length} fittings</small>
+                </span>
+                <span className="h-index-thumb" aria-hidden="true">
+                  <img src={origOf(CAT_IMG[c.id])} srcSet={srcSetOf(CAT_IMG[c.id])} alt="" loading="lazy" />
+                </span>
+                <span className="h-index-go" aria-hidden="true">
+                  →
+                </span>
+              </button>
             </li>
           ))}
         </ol>
+      </section>
 
-        <aside style={{ marginTop: 56, padding: '30px 28px', background: 'rgba(89,128,166,.09)', border: '1px solid rgba(89,128,166,.34)' }}>
-          <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 19, letterSpacing: '.05em', textTransform: 'uppercase', margin: '0 0 6px' }}>
-            Placeholder notice
+      <section className="container" style={{ paddingBottom: 'var(--section-y)' }}>
+        <div className="h-cta">
+          <span className="h-cta-sun" aria-hidden="true" />
+          <h2>
+            Ask for a sample unit <em>for evaluation.</em>
           </h2>
-          <p style={{ fontSize: 14.5, color: 'var(--ink-2)', margin: 0, maxWidth: '78ch' }}>
-            Milestone years, plant capacity, headcount and export markets above are realistic placeholders — the catalogue does
-            not carry company history. Send us the real dates and we will swap them in verbatim.
-          </p>
-        </aside>
+          <div className="h-cta-actions">
+            <button className="btn btn-light" onClick={go('/contact')}>
+              Talk to the technical desk <span className="btn-arrow">→</span>
+            </button>
+          </div>
+        </div>
       </section>
     </main>
   );

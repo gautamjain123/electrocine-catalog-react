@@ -1,0 +1,204 @@
+/* ============================================================================
+   Electrocine — hero studio, product shot and the small set of transitions
+
+   Motion is kept to what explains something: the colour-temperature switch
+   cross-fades the light, a new product eases in, sections fade up once.
+   Everything collapses under prefers-reduced-motion via app.css.
+   ========================================================================= */
+
+/* ── keyframes ───────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; translate: 0 16px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes rise {
+  from { opacity: 0; translate: 0 14px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes wipe-up {
+  from { clip-path: inset(0 0 100% 0); translate: 0 0.35em; }
+  to { clip-path: inset(-20% -5% -25% -5%); translate: 0 0; }
+}
+@keyframes shot-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+}
+
+/* shared decorative layers still referenced by inner pages */
+.hero-rays,
+.hero-blob {
+  display: none;
+}
+.page-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* hero styles live in hero.css */
+
+/* ── studio product shot ─────────────────────────────────────────────────── */
+.shot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+.shot-light {
+  overflow: hidden;
+}
+.shot-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.shot-halo {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 72%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(6px);
+  opacity: 0.25;
+  transition: opacity 0.35s;
+}
+.shot-dark .shot-halo {
+  width: 90%;
+  background: radial-gradient(circle, rgba(255, 240, 210, 0.5) 0%, rgba(255, 210, 130, 0.35) 16%, rgba(255, 210, 130, 0.12) 42%, transparent 68%);
+}
+.shot-obj {
+  position: relative;
+  z-index: 1;
+  width: 76%;
+  height: 68%;
+  margin-top: -4%;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.shot-img,
+.shot-refl {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
+  user-select: none;
+  pointer-events: none;
+}
+.shot-img {
+  top: 0;
+  filter: drop-shadow(0 14px 12px rgba(22, 33, 58, 0.16)) drop-shadow(0 3px 3px rgba(22, 33, 58, 0.12));
+}
+.shot-dark .shot-img {
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.45));
+}
+.shot-refl {
+  top: 100%;
+  transform: scaleY(-1);
+  opacity: 0.12;
+  filter: blur(1px);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 30%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 30%);
+}
+.shot-dark .shot-refl {
+  opacity: 0.24;
+}
+.shot-floor {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -6%;
+  height: 12%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(22, 33, 58, 0.26), transparent);
+  filter: blur(3px);
+}
+.shot-dark .shot-floor {
+  left: -6%;
+  right: -6%;
+  height: 18%;
+  bottom: -9%;
+  background: radial-gradient(closest-side, rgba(255, 230, 180, 0.4), rgba(255, 210, 130, 0.14) 55%, transparent);
+  filter: blur(6px);
+}
+.shot[data-lit] .shot-halo,
+.shot-host:hover .shot-halo,
+.shot-host:focus-visible .shot-halo {
+  opacity: 0.9;
+}
+@media (hover: hover) {
+  .shot-host:hover .shot-obj {
+    transform: translateY(-4px) scale(1.03);
+  }
+}
+
+/* hosts */
+.bento-shot {
+  min-height: 190px;
+}
+.bento-shot .shot-obj {
+  height: 74%;
+  max-width: 340px;
+}
+.card-shot {
+  height: 210px;
+}
+.card-shot .shot-obj {
+  height: 74%;
+}
+
+/* ── staggered reveals (other pages) ─────────────────────────────────────── */
+[data-stagger] > * {
+  opacity: 0;
+}
+[data-revealed] [data-stagger] > *,
+[data-stagger][data-revealed] > * {
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 50ms) both;
+}
+[data-stagger] > :nth-child(1) { --i: 0; }
+[data-stagger] > :nth-child(2) { --i: 1; }
+[data-stagger] > :nth-child(3) { --i: 2; }
+[data-stagger] > :nth-child(4) { --i: 3; }
+[data-stagger] > :nth-child(5) { --i: 4; }
+[data-stagger] > :nth-child(6) { --i: 5; }
+[data-stagger] > :nth-child(n + 7) { --i: 6; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-stagger] > * {
+    opacity: 1;
+  }
+}
+
+/* ── product sheet ───────────────────────────────────────────────────────── */
+.modal-figure {
+  align-items: stretch;
+  min-height: 300px;
+}
+.modal-shot {
+  animation: shot-enter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.modal-shot .shot-obj {
+  width: 72%;
+  height: 62%;
+}
+.modal-backdrop {
+  animation: backdrop-in 0.25s ease-out both;
+}
+.modal {
+  overflow-x: hidden;
+  animation: modal-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}

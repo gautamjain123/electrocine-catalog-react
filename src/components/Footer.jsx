@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATS, LOGO, SOCIALS } from '../data/catalog.js';
-import { useApp, Icon, GridLines } from '../lib/ui.jsx';
+import { useApp, Icon } from '../lib/ui.jsx';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -9,7 +9,7 @@ const colTitle = {
   fontSize: 10.5,
   letterSpacing: '.16em',
   textTransform: 'uppercase',
-  color: 'rgba(242,242,243,.45)',
+  color: 'rgba(251, 248, 243,.45)',
   marginBottom: 18,
 };
 
@@ -63,36 +63,21 @@ export default function Footer() {
 
   return (
     <footer className="on-dark" style={{ position: 'relative', overflow: 'hidden', background: 'var(--navy)', color: 'var(--bg)' }}>
-      <GridLines opacity={0.32} />
       <div className="container" style={{ position: 'relative', padding: '72px var(--gutter) 30px' }}>
         <div className="g g-footer">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 18 }}>
-              <img
-                src={LOGO}
-                alt=""
-                width="38"
-                height="38"
-                style={{ width: 38, height: 38, objectFit: 'contain', filter: 'brightness(0) invert(1) opacity(.9)' }}
-              />
-              <div style={{ lineHeight: 1.05 }}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-head)',
-                    fontWeight: 600,
-                    fontSize: 20,
-                    letterSpacing: '.06em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Electrocine
-                </div>
-                <div style={{ fontSize: 9.5, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(242,242,243,.5)' }}>
-                  Industries
-                </div>
-              </div>
+            {/* the real logo on a white disc — never recoloured — with the same
+                serif wordmark as the header */}
+            <div className="foot-brand">
+              <span className="foot-brand-mark">
+                <img src={LOGO} alt="" width="40" height="40" />
+              </span>
+              <span className="foot-brand-word">
+                <strong>Electrocine</strong>
+                <small>Industries</small>
+              </span>
             </div>
-            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: 'rgba(242,242,243,.6)', maxWidth: '38ch', margin: '0 0 24px' }}>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: 'rgba(251, 248, 243,.6)', maxWidth: '38ch', margin: '0 0 24px' }}>
               LED lighting series — panels, battens, street, flood, landscape and industrial luminaires, manufactured in India.
             </p>
             <form onSubmit={subscribe} noValidate>
@@ -163,7 +148,7 @@ export default function Footer() {
                       minHeight: 34,
                       textAlign: 'left',
                       fontSize: 14,
-                      color: 'rgba(242,242,243,.72)',
+                      color: 'rgba(251, 248, 243,.72)',
                       cursor: 'pointer',
                     }}
                   >
@@ -185,11 +170,11 @@ export default function Footer() {
             paddingTop: 26,
           }}
         >
-          <div style={{ fontSize: 12, color: 'rgba(242,242,243,.45)' }}>
+          <div style={{ fontSize: 12, color: 'rgba(251, 248, 243,.45)' }}>
             © {new Date().getFullYear()} Electrocine Industries. All rights reserved. Price list w.e.f. July 2024.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(242,242,243,.45)' }}>
+            <span style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(251, 248, 243,.45)' }}>
               ISO 9001 · BIS · RoHS
             </span>
             <div style={{ display: 'flex', gap: 1, background: 'rgba(255,255,255,.16)' }}>
@@ -207,7 +192,7 @@ export default function Footer() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'rgba(242,242,243,.6)',
+                    color: 'rgba(251, 248, 243,.6)',
                   }}
                 >
                   <Icon path={s.icon} size={15} />
@@ -216,6 +201,9 @@ export default function Footer() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="foot-wordmark" aria-hidden="true">
+        Electrocine<span>.</span>
       </div>
     </footer>
   );

@@ -1,388 +1,320 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CATS, PRODUCTS } from '../data/catalog.js';
-import { useApp, Corners, Icon, GridLines } from '../lib/ui.jsx';
+import { CATS, CAT_IMG, MODELS, PRODUCTS, origOf, srcSetOf } from '../data/catalog.js';
+import { useApp, Icon } from '../lib/ui.jsx';
 import { SETTINGS } from '../App.jsx';
+import ModelCard from '../components/ModelCard.jsx';
+import PageHead from '../components/PageHead.jsx';
+
+const WATT_MAX = 120;
+const SORTS = [
+  { id: 'featured', label: 'Catalogue order' },
+  { id: 'watt-asc', label: 'Wattage — low to high' },
+  { id: 'watt-desc', label: 'Wattage — high to low' },
+  { id: 'lumens', label: 'Light output — highest' },
+];
+const CAT_NAME = Object.fromEntries(CATS.map((c) => [c.id, c.name]));
+const FAMILIES = [{ id: 'all', name: 'Full range', img: null }, ...CATS.map((c) => ({ ...c, img: CAT_IMG[c.id] }))];
+const modelsIn = (id) => MODELS.filter((m) => id === 'all' || m.cat === id).length;
+const skusIn = (id) => PRODUCTS.filter((p) => id === 'all' || p.cat === id).length;
+const wattRange = (id) => {
+  const w = PRODUCTS.filter((p) => id === 'all' || p.cat === id).map((p) => p.watt);
+  return `${Math.min(...w)}–${Math.max(...w)} W`;
+};
+
+const lm = (p) => parseInt(p.lumens, 10) || 0;
+const plural = (n, word, withCount = false) => `${withCount ? n + ' ' : ''}${word}${n === 1 ? '' : 's'}`;
+const sorters = {
+  featured: null,
+  'watt-asc': (a, b) => a.watt - b.watt,
+  'watt-desc': (a, b) => b.watt - a.watt,
+  lumens: (a, b) => lm(b) - lm(a),
+};
+const thumb = (src) => (src && src.startsWith('/cat/hd/') ? { src: origOf(src), srcSet: srcSetOf(src) } : { src });
 
 export default function Products() {
   const navigate = useNavigate();
   const { openDetail, priceOf, pendingCat, clearPendingCat } = useApp();
   const wattId = useId();
+  const searchId = useId();
 
   const [cat, setCat] = useState('all');
   const [mount, setMount] = useState('all');
-  const [wattMax, setWattMax] = useState(120);
-  const [view, setView] = useState(SETTINGS.productView);
+  const [wattMax, setWattMax] = useState(WATT_MAX);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState('featured');
+  const [view, setView] = useState(SETTINGS.productView === 'table' ? 'table' : 'gallery');
 
-  // A category picked elsewhere (nav mega-menu, home bento, footer) lands here.
+  // A category picked elsewhere (nav mega-menu, home index, footer) lands here.
   useEffect(() => {
     if (pendingCat) {
       setCat(pendingCat);
       setMount('all');
-      setWattMax(120);
+      setWattMax(WATT_MAX);
+      setQuery('');
       clearPendingCat();
     }
   }, [pendingCat, clearPendingCat]);
 
   const mounts = useMemo(() => ['all', ...Array.from(new Set(PRODUCTS.map((p) => p.mount))).sort()], []);
 
-  const filtered = useMemo(
-    () => PRODUCTS.filter((p) => (cat === 'all' || p.cat === cat) && (mount === 'all' || p.mount === mount) && p.watt <= wattMax),
-    [cat, mount, wattMax]
-  );
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = PRODUCTS.filter(
+      (p) =>
+        (cat === 'all' || p.cat === cat) &&
+        (mount === 'all' || p.mount === mount) &&
+        p.watt <= wattMax &&
+        (!q || `${p.name} ${p.code} ${p.mount} ${CAT_NAME[p.cat]} ${p.dim}`.toLowerCase().includes(q))
+    );
+    return sorters[sort] ? [...list].sort(sorters[sort]) : list;
+  }, [cat, mount, wattMax, query, sort]);
+
+  const models = useMemo(() => {
+    const keep = new Set(filtered.map((p) => p.code));
+    const list = MODELS.map((m) => ({ model: m, variants: m.variants.filter((v) => keep.has(v.code)) })).filter((x) => x.variants.length);
+    if (sort === 'watt-asc') list.sort((a, b) => a.variants[0].watt - b.variants[0].watt);
+    if (sort === 'watt-desc') list.sort((a, b) => b.variants.at(-1).watt - a.variants.at(-1).watt);
+    if (sort === 'lumens') list.sort((a, b) => Math.max(...b.variants.map(lm)) - Math.max(...a.variants.map(lm)));
+    return list;
+  }, [filtered, sort]);
 
   const resetFilters = () => {
     setCat('all');
     setMount('all');
-    setWattMax(120);
+    setWattMax(WATT_MAX);
+    setQuery('');
   };
 
-  const filterNote = cat === 'all' ? '' : ' in ' + (CATS.find((c) => c.id === cat)?.name || '');
+  const active = [
+    mount !== 'all' && { k: 'mount', label: `Mounting: ${mount}`, clear: () => setMount('all') },
+    wattMax < WATT_MAX && { k: 'watt', label: `Up to ${wattMax} W`, clear: () => setWattMax(WATT_MAX) },
+    query.trim() && { k: 'q', label: `“${query.trim()}”`, clear: () => setQuery('') },
+  ].filter(Boolean);
+
+  const family = FAMILIES.find((f) => f.id === cat);
+  const go = (to) => () => {
+    navigate(to);
+    window.scrollTo(0, 0);
+  };
 
   return (
-    <main id="main">
-      <section
-        className="on-dark"
-        style={{ position: 'relative', overflow: 'hidden', background: 'var(--navy)', color: 'var(--bg)', paddingBlock: 'clamp(40px,6vw,60px) clamp(32px,5vw,46px)' }}
+    <main id="main" className="inner">
+      <PageHead
+        here="Products"
+        kicker="LED Lighting Series · price list w.e.f. July 2024"
+        title={cat === 'all' ? <>The full <em>range.</em></> : family.name}
+        aside={
+          <dl className="ph-facts">
+            <div>
+              <dd>{modelsIn(cat)}</dd>
+              <dt>Fittings</dt>
+            </div>
+            <div>
+              <dd>{skusIn(cat)}</dd>
+              <dt>SKUs</dt>
+            </div>
+            <div>
+              <dd>{wattRange(cat)}</dd>
+              <dt>Wattage span</dt>
+            </div>
+          </dl>
+        }
       >
-        <GridLines />
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: '-60%',
-            left: '40%',
-            width: '46vw',
-            height: '46vw',
-            borderRadius: '50%',
-            filter: 'blur(100px)',
-            opacity: 0.36,
-            background: 'radial-gradient(circle,#5980a6,transparent 68%)',
-            animation: 'aurora 22s ease-in-out infinite',
-          }}
-        />
-        <div className="container" style={{ position: 'relative' }}>
-          <nav aria-label="Breadcrumb" style={{ marginBottom: 22 }}>
-            <ol style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'rgba(242,242,243,.5)', listStyle: 'none', margin: 0, padding: 0 }}>
-              <li>
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    window.scrollTo(0, 0);
-                  }}
-                  className="crumb"
-                >
-                  Home
-                </button>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li style={{ color: 'var(--accent-light)' }} aria-current="page">
-                Products
-              </li>
-            </ol>
-          </nav>
-          <h1 className="t-h1" style={{ fontSize: 'clamp(34px,5.5vw,64px)', lineHeight: 1, margin: '0 0 14px' }}>
-            LED Lighting Series
-          </h1>
-          <p className="t-body" style={{ color: 'rgba(242,242,243,.68)', maxWidth: '62ch', margin: 0 }}>
-            Prices are ex-works and effective July 2024. P.O.R denotes price on request. All dimensions in millimetres.
-          </p>
-        </div>
-      </section>
-
-      <section className="container" style={{ paddingBlock: 'clamp(28px,4vw,36px) var(--section-y)' }}>
-        <div className="g g-catalogue">
-          <aside className="aside-sticky" aria-label="Filters">
-            <h2 style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--muted-2)', marginBottom: 12 }}>
-              Family
-            </h2>
-            <div className="famlist">
-              {[{ id: 'all', name: 'All products' }, ...CATS].map((c) => (
-                <button key={c.id} className="fam" aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>
-                  <span>{c.name}</span>
-                  <span style={{ fontFamily: 'var(--font-head)', opacity: 0.6 }}>
-                    {c.id === 'all' ? PRODUCTS.length : PRODUCTS.filter((p) => p.cat === c.id).length}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <h2 style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--muted-2)', marginBottom: 12 }}>
-              Mounting
-            </h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 30 }}>
-              {mounts.map((m) => (
-                <button key={m} className="pill" aria-pressed={mount === m} onClick={() => setMount(m)}>
-                  {m === 'all' ? 'Any' : m}
-                </button>
-              ))}
-            </div>
-
-            <label htmlFor={wattId} style={{ display: 'block', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--muted-2)', marginBottom: 12 }}>
-              Wattage — up to {wattMax} W
-            </label>
-            <input
-              id={wattId}
-              className="range"
-              type="range"
-              min="6"
-              max="120"
-              step="1"
-              value={wattMax}
-              onChange={(e) => setWattMax(Number(e.target.value))}
-              aria-valuetext={`Up to ${wattMax} watts`}
-              style={{ marginBottom: 30 }}
-            />
-
-            <button className="btn-outline" style={{ width: '100%' }} onClick={resetFilters}>
-              Reset filters
+        {/* family tabs wrap onto more lines rather than scrolling sideways */}
+        <div className="fam-tabs" role="group" aria-label="Product family">
+          {FAMILIES.map((f) => (
+            <button key={f.id} type="button" className="fam-tab" aria-pressed={cat === f.id} onClick={() => setCat(f.id)}>
+              {f.img ? (
+                <img {...thumb(f.img)} alt="" loading="eager" />
+              ) : (
+                <span className="fam-tab-all" aria-hidden="true">
+                  ✦
+                </span>
+              )}
+              <span className="fam-tab-name">{f.name}</span>
+              <span className="fam-tab-count">{modelsIn(f.id)}</span>
             </button>
-          </aside>
+          ))}
+        </div>
+      </PageHead>
 
-          <div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 16,
-                paddingBottom: 16,
-                borderBottom: '1px solid var(--line)',
-                marginBottom: 22,
-              }}
-            >
-              <p aria-live="polite" style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
-                <strong style={{ fontFamily: 'var(--font-head)', fontSize: 20, color: 'var(--ink)' }}>{filtered.length}</strong>{' '}
-                products{filterNote}
-              </p>
-              <div className="chip-group" role="group" aria-label="Layout">
-                <button className="chip" aria-pressed={view === 'grid'} onClick={() => setView('grid')}>
-                  Grid
-                </button>
-                <button className="chip" aria-pressed={view === 'table'} onClick={() => setView('table')}>
-                  Spec table
-                </button>
-              </div>
+      {/* ── filter bar ── */}
+      <div className="filters">
+        <div className="container">
+          <div className="filters-bar">
+            <div className="filters-search">
+              <label htmlFor={searchId} className="visually-hidden">
+                Search the catalogue
+              </label>
+              <Icon path='<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>' size={18} />
+              <input
+                id={searchId}
+                type="search"
+                placeholder="Search name, code or size — e.g. BLPR, 600×600"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
             </div>
-
-            {filtered.length === 0 && (
-              <div className="blueprint" style={{ position: 'relative', padding: 'clamp(40px,7vw,64px) 32px', textAlign: 'center', background: 'rgba(255,255,255,.5)' }}>
-                <Corners />
-                <Icon
-                  path='<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>'
-                  size={34}
-                  stroke="var(--accent)"
-                  style={{ margin: '0 auto 18px' }}
-                />
-                <p style={{ fontFamily: 'var(--font-head)', fontSize: 'clamp(20px,3vw,24px)', letterSpacing: '.03em', textTransform: 'uppercase', margin: '0 0 8px' }}>
-                  No SKU matches that combination
-                </p>
-                <p style={{ fontSize: 14.5, color: 'var(--muted)', maxWidth: '44ch', margin: '0 auto 22px' }}>
-                  Widen the wattage range or clear the mounting filter. Custom wattages are produced against order.
-                </p>
-                <button className="btn btn-primary" onClick={resetFilters}>
-                  Clear all filters
-                </button>
-              </div>
-            )}
-
-            {view === 'grid' && filtered.length > 0 && (
-              <ul className="g g-cards" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                {filtered.map((p) => (
-                  <li key={p.code + p.dim} style={{ display: 'flex' }}>
-                    <ProductCard p={p} price={priceOf(p)} onOpen={() => openDetail(p)} />
-                  </li>
+            <label className="filters-field">
+              <span>Mounting</span>
+              <select value={mount} onChange={(e) => setMount(e.target.value)}>
+                {mounts.map((m) => (
+                  <option key={m} value={m}>
+                    {m === 'all' ? 'Any' : m}
+                  </option>
                 ))}
-              </ul>
-            )}
-
-            {view === 'table' && filtered.length > 0 && (
-              <div className="blueprint" style={{ position: 'relative', background: '#fff' }}>
-                <Corners />
-                <div className="table-scroll">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <caption className="visually-hidden">
-                      {filtered.length} products{filterNote}. Select a row for full specifications.
-                    </caption>
-                    <thead>
-                      <tr style={{ background: 'rgba(89,128,166,.12)' }}>
-                        {[
-                          ['Product', 'left'],
-                          ['Code', 'left'],
-                          ['Watt', 'right'],
-                          ['Min. lumens', 'right'],
-                          ['Dimension', 'right'],
-                          ['Price', 'right'],
-                        ].map(([label, align]) => (
-                          <th
-                            key={label}
-                            scope="col"
-                            style={{
-                              textAlign: align,
-                              padding: '13px 16px',
-                              fontFamily: 'var(--font-head)',
-                              fontSize: 11.5,
-                              letterSpacing: '.14em',
-                              textTransform: 'uppercase',
-                              color: 'var(--accent-dark)',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((p) => (
-                        <tr
-                          key={p.code + p.dim}
-                          className="hov-row"
-                          onClick={() => openDetail(p)}
-                          style={{ borderBottom: '1px solid rgba(29,31,32,.1)', cursor: 'pointer' }}
-                        >
-                          <th scope="row" style={{ padding: '12px 16px', fontFamily: 'var(--font-head)', fontSize: 16, letterSpacing: '.02em', textAlign: 'left', fontWeight: 400 }}>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openDetail(p);
-                              }}
-                              style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}
-                            >
-                              {p.name}
-                            </button>
-                          </th>
-                          <td className="break-word" style={{ padding: '12px 16px', color: 'var(--muted)', fontSize: 12 }}>
-                            {p.code}
-                          </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-head)', fontSize: 15 }}>{p.watt}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{p.lumens}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{p.dim}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-head)', fontSize: 16, color: 'var(--navy)', whiteSpace: 'nowrap' }}>
-                            {priceOf(p)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+              </select>
+            </label>
+            <div className="filters-field filters-watt">
+              <label htmlFor={wattId}>
+                Up to <strong>{wattMax} W</strong>
+              </label>
+              <input
+                id={wattId}
+                className="range"
+                type="range"
+                min="6"
+                max={WATT_MAX}
+                step="1"
+                value={wattMax}
+                onChange={(e) => setWattMax(Number(e.target.value))}
+                aria-valuetext={`Up to ${wattMax} watts`}
+              />
+            </div>
+            <label className="filters-field">
+              <span>Sort</span>
+              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                {SORTS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="filters-view" role="group" aria-label="Layout">
+              <button aria-pressed={view === 'gallery'} onClick={() => setView('gallery')}>
+                Gallery
+              </button>
+              <button aria-pressed={view === 'table'} onClick={() => setView('table')}>
+                Spec table
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+
+      <section className="container results">
+        <div className="results-status">
+          <p aria-live="polite">
+            <strong>{view === 'gallery' ? models.length : filtered.length}</strong>{' '}
+            {view === 'gallery' ? plural(models.length, 'fitting') : plural(filtered.length, 'SKU')}
+            {view === 'gallery' && models.length > 0 && <> · {plural(filtered.length, 'wattage option', true)}</>}
+            {cat !== 'all' && <> in {family.name}</>}
+          </p>
+          {active.length > 0 && (
+            <ul className="results-active">
+              {active.map((a) => (
+                <li key={a.k}>
+                  <button type="button" onClick={a.clear} aria-label={`Remove filter ${a.label}`}>
+                    {a.label} <span aria-hidden="true">×</span>
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button type="button" className="results-clear" onClick={resetFilters}>
+                  Clear all
+                </button>
+              </li>
+            </ul>
+          )}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="results-empty">
+            <p className="results-empty-title">No fitting matches that combination.</p>
+            <p>Widen the wattage range, clear the search or the mounting filter. Custom wattages are produced against order.</p>
+            <button className="btn btn-dark" onClick={resetFilters}>
+              Clear all filters
+            </button>
+          </div>
+        )}
+
+        {view === 'gallery' && models.length > 0 && (
+          <ul className="model-grid">
+            {models.map(({ model, variants }, i) => (
+              <li key={model.key} className={i === 0 && models.length > 2 ? 'model-grid-feature' : undefined}>
+                <ModelCard model={model} variants={variants} feature={i === 0 && models.length > 2} />
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {view === 'table' && filtered.length > 0 && (
+          <div className="sheet">
+            <table className="sheet-table">
+              <caption className="visually-hidden">{filtered.length} products. Select a row for full specifications.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Product</th>
+                  <th scope="col">Code</th>
+                  <th scope="col" className="num">
+                    Watt
+                  </th>
+                  <th scope="col" className="num">
+                    Min. lumens
+                  </th>
+                  <th scope="col" className="num">
+                    Dimension
+                  </th>
+                  <th scope="col" className="num">
+                    Price
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p) => (
+                  <tr key={p.code + p.dim} onClick={() => openDetail(p)}>
+                    <th scope="row">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDetail(p);
+                        }}
+                      >
+                        <span className="sheet-thumb" aria-hidden="true">
+                          <img {...thumb(p.img)} alt="" loading="lazy" />
+                        </span>
+                        {p.name}
+                      </button>
+                    </th>
+                    <td className="sheet-code break-word">{p.code}</td>
+                    <td className="num strong">{p.watt}</td>
+                    <td className="num">{p.lumens}</td>
+                    <td className="num">{p.dim}</td>
+                    <td className="num strong">{priceOf(p)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <aside className="custom-band">
+          <div>
+            <p className="t-kicker" style={{ color: 'var(--accent-light)' }}>
+              Made to order
+            </p>
+            <h2>
+              Need a wattage that isn&rsquo;t <em>listed?</em>
+            </h2>
+            <p>Custom wattages, colour temperatures and housings are produced against order, with the same declared spec sheet.</p>
+          </div>
+          <button className="btn btn-light" onClick={go('/contact')}>
+            Ask the technical desk <span className="btn-arrow">→</span>
+          </button>
+        </aside>
       </section>
     </main>
-  );
-}
-
-/* A real <button> so the card is reachable by keyboard and announced correctly. */
-function ProductCard({ p, price, onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      className="blueprint hov-lift"
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        background: 'rgba(255,255,255,.55)',
-        padding: 0,
-        cursor: 'pointer',
-        textAlign: 'left',
-        font: 'inherit',
-        color: 'inherit',
-        border: '1px solid var(--line)',
-      }}
-    >
-      <Corners />
-      <span
-        style={{
-          position: 'relative',
-          height: 172,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          background: 'radial-gradient(circle at 50% 40%,rgba(89,128,166,.12),transparent 68%)',
-          borderBottom: '1px solid var(--line-soft)',
-        }}
-      >
-        <img src={p.img} alt={p.name} loading="lazy" className="zoom-img" style={{ maxHeight: 132, maxWidth: '78%', objectFit: 'contain' }} />
-        <span
-          style={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            padding: '4px 9px',
-            background: 'rgba(29,45,61,.9)',
-            color: 'var(--bg)',
-            fontSize: 10,
-            letterSpacing: '.12em',
-            textTransform: 'uppercase',
-          }}
-        >
-          {p.watt}W
-        </span>
-      </span>
-      <span style={{ display: 'block', padding: '16px 18px 18px', flex: '1 1 auto' }}>
-        <span
-          style={{
-            display: 'block',
-            fontFamily: 'var(--font-head)',
-            fontWeight: 600,
-            fontSize: 19,
-            lineHeight: 1.1,
-            letterSpacing: '.02em',
-            textTransform: 'uppercase',
-            marginBottom: 5,
-          }}
-        >
-          {p.name}
-        </span>
-        <span className="break-word" style={{ display: 'block', fontSize: 11.5, letterSpacing: '.06em', color: 'var(--muted-2)', marginBottom: 14 }}>
-          {p.code}
-        </span>
-        <span
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px 12px',
-            paddingTop: 12,
-            borderTop: '1px dashed rgba(29,31,32,.16)',
-          }}
-        >
-          <span>
-            <span style={{ display: 'block', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--muted-2)' }}>
-              Lumens
-            </span>
-            <span style={{ display: 'block', fontFamily: 'var(--font-head)', fontSize: 16 }}>{p.lumens}</span>
-          </span>
-          <span>
-            <span style={{ display: 'block', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--muted-2)' }}>
-              Dimension
-            </span>
-            <span style={{ display: 'block', fontFamily: 'var(--font-head)', fontSize: 16 }}>{p.dim}</span>
-          </span>
-        </span>
-        <span
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'baseline',
-            gap: 10,
-            marginTop: 14,
-            paddingTop: 12,
-            borderTop: '1px solid var(--line-soft)',
-          }}
-        >
-          <span style={{ fontFamily: 'var(--font-head)', fontSize: 20, color: 'var(--navy)' }}>{price}</span>
-          <span style={{ fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--accent-dark)', whiteSpace: 'nowrap' }}>
-            Details →
-          </span>
-        </span>
-      </span>
-    </button>
   );
 }

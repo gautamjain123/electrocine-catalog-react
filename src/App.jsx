@@ -4,19 +4,22 @@ import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import ProductModal from './components/ProductModal.jsx';
 import Toast from './components/Toast.jsx';
+import Intro from './components/Intro.jsx';
 import Home from './pages/Home.jsx';
 import Products from './pages/Products.jsx';
 import About from './pages/About.jsx';
 import Contact from './pages/Contact.jsx';
 import { AppCtx, ErrorBoundary } from './lib/ui.jsx';
+import { applySeo, productListLd } from './lib/seo.js';
+import { CATS, MODELS } from './data/catalog.js';
 
 /* The prototype exposed these three as design-tool props. Standalone there is no
    props panel, so they live here as app config.
      showPrices  — false renders every price as "On request" (the design-tool default).
                    Defaulted to true here because the catalogue data carries real
                    ex-works rates and this build has no toggle to reveal them.
-     motion      — 'reduced' drops the floating hero-card drift animation. Users who
-                   set prefers-reduced-motion get that treatment automatically.
+     motion      — 'reduced' holds the hero still: no auto-advance or orbit turn.
+                   Users who set prefers-reduced-motion get that automatically.
      productView — initial catalogue layout before the user picks Grid / Spec table. */
 export const SETTINGS = {
   showPrices: true,
@@ -24,12 +27,6 @@ export const SETTINGS = {
   productView: 'grid',
 };
 
-const TITLES = {
-  '/': 'Electrocine Industries — LED Lighting Series',
-  '/products': 'Products — Electrocine Industries',
-  '/about': 'Company — Electrocine Industries',
-  '/contact': 'Request a quotation — Electrocine Industries',
-};
 
 function NotFound() {
   return (
@@ -89,23 +86,62 @@ export default function App() {
     [navigate]
   );
 
-  /* Appending here — in the event handler rather than an effect on the Contact
-     page — means the line is added exactly once, and the draft survives leaving
-     /contact, so several products can be collected into one enquiry. */
+  /* The quote basket: products collected from the catalogue, shown with their
+     photographs on /contact. Each one also writes a line into the enquiry draft —
+     here, in the event handler rather than an effect on the Contact page, so the
+     line is added exactly once and the draft survives leaving /contact. */
+  const [quote, setQuote] = useState([]);
+  // Mirror for duplicate checks inside handlers, without waiting for a render.
+  const quoteRef = useRef([]);
+  const quoteLine = (p) => `${p.name} (${p.code}) — quantity: `;
+
+  const addToQuote = useCallback(
+    (p) => {
+      if (quoteRef.current.some((x) => x.code === p.code)) {
+        flash(`${p.code} is already in the enquiry`);
+        return false;
+      }
+      quoteRef.current = [...quoteRef.current, p];
+      setQuote(quoteRef.current);
+      setEnquiryMsg((m) => (m ? m + '\n' : '') + quoteLine(p));
+      flash(`${p.code} added to the enquiry`);
+      return true;
+    },
+    [flash]
+  );
+
+  const removeFromQuote = useCallback((p) => {
+    quoteRef.current = quoteRef.current.filter((x) => x.code !== p.code);
+    setQuote(quoteRef.current);
+    setEnquiryMsg((m) =>
+      m
+        .split('\n')
+        .filter((line) => !line.includes(`(${p.code})`))
+        .join('\n')
+    );
+  }, []);
+
+  const clearQuote = useCallback(() => {
+    quoteRef.current = [];
+    setQuote([]);
+  }, []);
+
   const quoteFromDetail = useCallback(
     (p) => {
       setDetail(null);
-      setEnquiryMsg((m) => (m ? m + '\n' : '') + `${p.name} (${p.code}) — quantity: `);
+      addToQuote(p);
       navigate('/contact');
       window.scrollTo(0, 0);
-      flash(`${p.code} added to the enquiry`);
     },
-    [navigate, flash]
+    [navigate, addToQuote]
   );
 
-  // Each route gets its own document title.
+  // Each route gets its own title, description, canonical, share tags and
+  // structured data (see lib/seo.js).
   useEffect(() => {
-    document.title = TITLES[location.pathname] || 'Page not found — Electrocine Industries';
+    const catName = Object.fromEntries(CATS.map((c) => [c.id, c.name]));
+    const extra = location.pathname === '/products' ? productListLd(MODELS.map((m) => ({ ...m, catName: catName[m.cat] }))) : null;
+    applySeo(location.pathname, extra);
   }, [location.pathname]);
 
   // Deep links like /#technology need the anchor resolved after the page mounts.
@@ -124,6 +160,10 @@ export default function App() {
       openDetail,
       closeDetail,
       quoteFromDetail,
+      quote,
+      addToQuote,
+      removeFromQuote,
+      clearQuote,
       priceOf,
       pendingCat,
       clearPendingCat: () => setPendingCat(null),
@@ -132,7 +172,7 @@ export default function App() {
       setEnquiryMsg,
       settings: SETTINGS,
     }),
-    [toast, flash, detail, openDetail, closeDetail, quoteFromDetail, priceOf, pendingCat, openCategory, enquiryMsg]
+    [toast, flash, detail, openDetail, closeDetail, quoteFromDetail, quote, addToQuote, removeFromQuote, clearQuote, priceOf, pendingCat, openCategory, enquiryMsg]
   );
 
   return (
@@ -154,6 +194,7 @@ export default function App() {
         <Footer />
         <ProductModal />
         <Toast />
+        <Intro />
       </div>
     </AppCtx.Provider>
   );
