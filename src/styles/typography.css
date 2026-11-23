@@ -1,0 +1,115 @@
+/* ============================================================================
+   Typography — Plus Jakarta Sans throughout (loaded last).
+
+   The display styles were drawn for a light serif (weights 300–400, italic
+   accents). In a sans those read thin and washed-out, so every display role
+   is re-weighted here, and accent words keep their blue but drop the italic.
+   ========================================================================= */
+
+/* big headlines */
+.t-h1,
+.t-h2,
+.t-h3,
+.hero-title,
+.ph-title,
+.h-title,
+.in-title,
+.h-statement,
+.h-cta h2,
+.custom-band h2 {
+  font-weight: 700 !important;
+  letter-spacing: -0.035em !important;
+  font-variation-settings: normal !important;
+}
+.hero-title,
+.ph-title {
+  line-height: 1 !important;
+  letter-spacing: -0.045em !important;
+}
+.h-statement {
+  font-weight: 600 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.18 !important;
+}
+
+/* accent words: brand blue, upright */
+.hero-title em,
+.ph-title em,
+.h-title em,
+.in-title em,
+.h-statement em,
+.h-cta h2 em,
+.custom-band h2 em,
+.t-h1 em,
+.t-h2 em {
+  font-style: normal !important;
+  font-weight: inherit !important;
+}
+
+/* figures */
+.h-numbers dd,
+.hero-facts dd,
+.ph-facts dd,
+.tl-year,
+.facts-grid dd,
+.results-status strong,
+.cat-meta strong,
+.model-price {
+  font-weight: 650 !important;
+  letter-spacing: -0.035em !important;
+}
+
+/* smaller display headings */
+.h-index-name,
+.h-col h3,
+.h-app h3,
+.h-certs-title,
+.h-steps h3,
+.h-launch-photo figcaption span,
+.tl-copy h3,
+.in-cols h2,
+.model-name,
+.mega-name,
+.ct-form-head h2,
+.ct-basket-head h2,
+.ct-sent h2,
+.results-empty-title,
+.ph-contacts a,
+.ph-contacts strong,
+.intro-caption-text strong,
+.home-h3 {
+  font-weight: 650 !important;
+  letter-spacing: -0.02em !important;
+}
+.h-faq-item button {
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+.h-quotes blockquote {
+  font-weight: 500 !important;
+  letter-spacing: -0.005em;
+}
+
+/* wordmarks */
+.hdr-word strong,
+.foot-brand-word strong,
+.intro-brand strong {
+  font-weight: 750 !important;
+  letter-spacing: -0.03em !important;
+}
+.foot-wordmark {
+  font-weight: 800 !important;
+  letter-spacing: -0.06em !important;
+}
+
+/* labels set in the display face inside the intro film */
+.b-brand,
+.t-brand {
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* body copy: a touch more weight reads better in this face */
+body {
+  font-weight: 450;
+}

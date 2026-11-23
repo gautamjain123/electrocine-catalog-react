@@ -7,6 +7,7 @@
 @import './styles/header.css';
 @import './styles/inner.css';
 @import './styles/intro.css';
+@import './styles/typography.css';
 
 @keyframes aurora{0%{transform:translate3d(-6%,-4%,0) scale(1)}50%{transform:translate3d(6%,5%,0) scale(1.18)}100%{transform:translate3d(-6%,-4%,0) scale(1)}}
 @keyframes drift{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}
