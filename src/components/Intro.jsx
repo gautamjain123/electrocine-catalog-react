@@ -12,15 +12,17 @@ import { LOGO } from '../data/catalog.js';
    session (add ?intro to the URL to replay), skippable, and skipped under
    reduced motion. */
 
-const T = 9500; // ms — the whole film; every stage scales from this
+const T = 10500; // ms — the whole film; every stage scales from this
 const KEY = 'ec-intro-seen';
 
+/* `at` is the fraction of T where each stage begins (matches intro.css). */
 const STEPS = [
-  { at: 0, label: 'Casting' },
-  { at: 0.22, label: 'Assembly' },
-  { at: 0.4, label: 'Testing' },
-  { at: 0.56, label: 'Packing' },
-  { at: 0.74, label: 'Dispatch' },
+  { at: 0, label: 'Raw material', caption: 'Aluminium ADC12 ingots, hoisted to the line' },
+  { at: 0.1, label: 'Die casting', caption: 'A 250-tonne press forms the housing' },
+  { at: 0.298, label: 'Assembly', caption: 'The robot fits the LED board' },
+  { at: 0.46, label: 'Testing', caption: 'Every fitting is lux-tested — 7200 lm, pass' },
+  { at: 0.604, label: 'Packing', caption: 'Boxed, taped and labelled' },
+  { at: 0.766, label: 'Dispatch', caption: 'On the road to site' },
 ];
 
 const shouldPlay = () => {
@@ -264,9 +266,27 @@ export default function Intro() {
                 <rect key={`${row}-${c}`} x={-84 + c * 28 + (row % 2) * 10} y={300 - row * 13} width="26" height="12" rx="2" fill="url(#g-ingot)" stroke="#5f6674" strokeWidth="0.6" />
               ))
             )}
-            <text x="-15" y="268" className="i-plate">
+            <rect x="-62" y="329" width="94" height="10" rx="1" fill="#f4efe1" />
+            <text x="-15" y="337" className="i-plate i-plate-dark">
               ALUMINIUM ADC12
             </text>
+          </g>
+
+          {/* overhead hoist: rail, trolley and cable that pays out */}
+          <rect x="-140" y="38" width="320" height="6" rx="2" fill="#2f4267" />
+          <rect x="-140" y="34" width="6" height="14" fill="#24365a" />
+          <rect x="174" y="34" width="6" height="14" fill="#24365a" />
+          <g className="rm-trolley">
+            <rect x="-62" y="30" width="38" height="14" rx="2" fill="#f2b33d" />
+            <rect x="-62" y="40" width="38" height="4" fill="url(#p-hazard)" opacity="0.6" />
+            <rect className="rm-cable" x="-44" y="44" width="2" height="1" fill="#9aa6b8" />
+          </g>
+          <g className="rm-hoist">
+            <path d="M-49 236 h12 v4 h-4 v4 a3 3 0 1 1 -4 0 v-4 h-4 Z" fill="#c3ccda" />
+            <g className="rm-ingot">
+              <rect x="-56" y="248" width="26" height="12" rx="2" fill="url(#g-ingot)" stroke="#5f6674" strokeWidth="0.6" />
+              <rect x="-53" y="250" width="18" height="2" rx="1" fill="#fff" opacity="0.5" />
+            </g>
           </g>
 
           {/* ═══════════════ A — DIE-CASTING PRESS ═══════════════ */}
@@ -598,6 +618,14 @@ export default function Intro() {
       </div>
 
       <div className="intro-hud">
+        {/* the current stage, named large */}
+        <div className="intro-caption" key={Math.min(step, STEPS.length - 1)} aria-live="polite">
+          <span className="intro-caption-no">{String(Math.min(step, STEPS.length - 1) + 1).padStart(2, '0')}</span>
+          <span className="intro-caption-text">
+            <strong>{STEPS[Math.min(step, STEPS.length - 1)].label}</strong>
+            <small>{STEPS[Math.min(step, STEPS.length - 1)].caption}</small>
+          </span>
+        </div>
         <ol className="intro-steps">
           {STEPS.map((s, i) => (
             <li key={s.label} data-state={step > i ? 'done' : step === i ? 'active' : 'todo'}>
